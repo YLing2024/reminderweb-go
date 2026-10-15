@@ -113,8 +113,14 @@ func TestClientIPTrustProxy(t *testing.T) {
 	if ip := ClientIP(headers, "127.0.0.1:1234", true); ip != "203.0.113.7" {
 		t.Fatalf("信任代理时应取首个 XFF，得到 %q", ip)
 	}
-	if ip := ClientIP(headers, "127.0.0.1:1234", false); ip != "127.0.0.1:1234" {
-		t.Fatalf("不信任代理时应取 RemoteAddr，得到 %q", ip)
+	if ip := ClientIP(headers, "127.0.0.1:1234", false); ip != "127.0.0.1" {
+		t.Fatalf("不信任代理时应取 RemoteAddr 的主机部分（去端口），得到 %q", ip)
+	}
+	if ip := ClientIP(http.Header{}, "[::1]:1234", false); ip != "::1" {
+		t.Fatalf("IPv6 RemoteAddr 应去掉方括号与端口，得到 %q", ip)
+	}
+	if ip := ClientIP(http.Header{}, "", false); ip != "unknown" {
+		t.Fatalf("空 RemoteAddr 应回落到 unknown，得到 %q", ip)
 	}
 }
 

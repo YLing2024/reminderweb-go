@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -326,8 +327,23 @@ func ClientIP(headers http.Header, remoteAddress string, trustProxy bool) string
 			}
 		}
 	}
-	if remoteAddress != "" {
-		return remoteAddress
+	if host := hostFromRemoteAddr(remoteAddress); host != "" {
+		return host
 	}
 	return "unknown"
+}
+
+// hostFromRemoteAddr 去掉 RemoteAddr 的端口部分，只留主机。
+// 旧实现的 req.socket.remoteAddress 只含 IP；若把 `127.0.0.1:54321` 整串当作限流键，
+// 每个连接都会是「新客户端」，限流永远不触发。
+func hostFromRemoteAddr(remoteAddress string) string {
+	trimmed := strings.TrimSpace(remoteAddress)
+	if trimmed == "" {
+		return ""
+	}
+	if host, _, err := net.SplitHostPort(trimmed); err == nil {
+		return host
+	}
+	// 无端口（纯 IP / 主机名）时原样返回。
+	return trimmed
 }
