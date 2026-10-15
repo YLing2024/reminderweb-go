@@ -101,7 +101,7 @@ func (s *Server) handleSyncUpload(ctx *Context) (Response, error) {
 		return sendJSON(409, map[string]any{"error": "sync_in_progress"}), nil
 	}
 	if err != nil {
-		return Response{}, err
+		return syncErrorResponse(err)
 	}
 	return sendJSON(200, result), nil
 }
