@@ -2,6 +2,8 @@ BINARY := reminderweb-go
 GOFLAGS := -trimpath
 LDFLAGS := -s -w
 WEB_DIST := web/dist/index.html
+# 只测本仓库的 Go 包，避免误扫 web/node_modules 里的第三方 Go 源码。
+PKGS := ./cmd/... ./internal/... ./tools/...
 
 .PHONY: all web build test race vet check fmt clean docker run
 
@@ -17,10 +19,10 @@ build: web
 	CGO_ENABLED=0 go build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/reminderweb-go
 
 test: web
-	go test ./... -count=1
+	go test $(PKGS) -count=1
 
 race: web
-	go test ./... -count=1 -race
+	go test $(PKGS) -count=1 -race
 
 vet: web
 	go vet ./...
@@ -28,7 +30,7 @@ vet: web
 # 机检路由↔文档一致 + vet + 单测（聚合门禁）。
 check: web vet
 	node scripts/check-api-docs.mjs
-	go test ./... -count=1
+	go test $(PKGS) -count=1
 
 fmt:
 	gofmt -l .
