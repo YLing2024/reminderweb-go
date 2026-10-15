@@ -129,7 +129,8 @@ func Load(get func(string) string) (*Config, error) {
 	if host == "" {
 		host = "127.0.0.1"
 	}
-	port, err := pickInt(pick("PORT", intPtrString(yamlValues.Port)), "PORT", 19240, 1, 65535)
+	// 默认端口对齐旧 Node 实现（server/src/config.ts：未设置 PORT 时监听 18940）。
+	port, err := pickInt(pick("PORT", intPtrString(yamlValues.Port)), "PORT", 18940, 1, 65535)
 	if err != nil {
 		return nil, err
 	}

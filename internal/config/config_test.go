@@ -11,8 +11,8 @@ func TestLoadDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatalf("默认配置加载失败：%v", err)
 	}
-	if cfg.Host != "127.0.0.1" || cfg.Port != 19240 {
-		t.Fatalf("默认监听 = %s:%d，期望 127.0.0.1:19240", cfg.Host, cfg.Port)
+	if cfg.Host != "127.0.0.1" || cfg.Port != 18940 {
+		t.Fatalf("默认监听 = %s:%d，期望 127.0.0.1:18940", cfg.Host, cfg.Port)
 	}
 	if cfg.AuthMode != AuthBuiltin {
 		t.Fatalf("默认认证模式 = %s，期望 builtin", cfg.AuthMode)
