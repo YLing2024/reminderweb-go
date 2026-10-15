@@ -51,6 +51,7 @@ internal/httpapi/     路由装配、CORS、静态托管
 web/                  前端源码（dist 被根包 go:embed）
 tools/fakedav/        验收用隔离假 WebDAV（不参与生产）
 docs/API.md           HTTP 契约（权威）
+docs/ACCEPTANCE.md    需求书 §7 的 10 条验收真实记录与差异清单
 docs/COMPONENTS.md    前端组件登记
 ```
 
@@ -97,7 +98,7 @@ WebDAV 连接一开始沿用 `WEBDAV_*` 环境变量，之后以页面上设置�
 
 ## 与旧实现的有意差异
 
-见发布说明与仓库内的验收报告；当前已知差异集中在少数边界行为（如端口默认值由旧版的 18940 改为 19240、
+见 [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md)；当前已知差异集中在少数边界行为（如端口默认值由旧版的 18940 改为 19240、
 未支持方法在 `/api/webdav/config` 上返回 405 等），不影响前端契约与数据兼容。
 
 ## 许可
