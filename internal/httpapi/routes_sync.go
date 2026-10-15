@@ -115,11 +115,11 @@ func (s *Server) handleSyncRestore(ctx *Context) (Response, error) {
 		return messageError(400, "invalid_name", "请求缺少备份文件名"), nil
 	}
 	result, ran, err := ctx.Sync.Restore(name)
-	if !ran {
-		return sendJSON(409, map[string]any{"error": "sync_in_progress"}), nil
-	}
 	if err != nil {
 		return syncErrorResponse(err)
+	}
+	if !ran {
+		return sendJSON(409, map[string]any{"error": "sync_in_progress"}), nil
 	}
 	return sendJSON(200, result), nil
 }
@@ -128,16 +128,13 @@ func (s *Server) handleSyncDeleteFile(ctx *Context) (Response, error) {
 	if ctx.Sync == nil {
 		return sendJSON(409, map[string]any{"error": "sync_disabled"}), nil
 	}
-	name, ok := decodePathComponent(ctx.Request.PathValue("name"))
-	if !ok {
-		return messageError(400, "invalid_name", "备份文件名不合法"), nil
-	}
+	name := ctx.Request.PathValue("name")
 	ran, err := ctx.Sync.DeleteRemote(name)
-	if !ran {
-		return sendJSON(409, map[string]any{"error": "sync_in_progress"}), nil
-	}
 	if err != nil {
 		return syncErrorResponse(err)
+	}
+	if !ran {
+		return sendJSON(409, map[string]any{"error": "sync_in_progress"}), nil
 	}
 	return sendJSON(200, map[string]any{"ok": true}), nil
 }
