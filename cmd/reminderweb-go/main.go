@@ -43,7 +43,14 @@ func run() error {
 		return serveStaticOnly(cfg, logger)
 	}
 
-	db, err := store.Open(cfg.DataDir)
+	db, err := store.Open(store.Params{
+		Host:     cfg.DBHost,
+		Port:     cfg.DBPort,
+		Name:     cfg.DBName,
+		User:     cfg.DBUser,
+		Password: cfg.DBPassword,
+		DSN:      cfg.DBDSN,
+	})
 	if err != nil {
 		return err
 	}

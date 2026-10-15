@@ -7,6 +7,7 @@ import (
 
 	"reminderweb-go/internal/config"
 	"reminderweb-go/internal/store"
+	"reminderweb-go/internal/store/storetest"
 )
 
 func TestHashAndVerifyPassword(t *testing.T) {
@@ -144,10 +145,5 @@ func TestResolveIdentityModes(t *testing.T) {
 
 func openTestDB(t *testing.T) *store.DB {
 	t.Helper()
-	db, err := store.OpenPath(":memory:")
-	if err != nil {
-		t.Fatalf("打开内存库失败：%v", err)
-	}
-	t.Cleanup(func() { _ = db.Close() })
-	return db
+	return storetest.Open(t)
 }

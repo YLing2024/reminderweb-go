@@ -17,8 +17,11 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.AuthMode != AuthBuiltin {
 		t.Fatalf("默认认证模式 = %s，期望 builtin", cfg.AuthMode)
 	}
-	if cfg.DataDir != "./data" {
-		t.Fatalf("默认数据目录 = %s", cfg.DataDir)
+	if cfg.DBHost != "127.0.0.1" || cfg.DBPort != 3306 || cfg.DBName != "reminderweb" {
+		t.Fatalf("默认数据库 = %s:%d/%s，期望 127.0.0.1:3306/reminderweb", cfg.DBHost, cfg.DBPort, cfg.DBName)
+	}
+	if cfg.DBDSN != "" {
+		t.Fatalf("默认 DB_DSN 应为空，得到 %q", cfg.DBDSN)
 	}
 	if !cfg.ServeStatic || cfg.StaticOnly {
 		t.Fatalf("默认托管静态且非纯静态：serveStatic=%v staticOnly=%v", cfg.ServeStatic, cfg.StaticOnly)

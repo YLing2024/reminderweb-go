@@ -99,7 +99,7 @@ func Read(q store.Querier, name string) ([]byte, bool, error) {
 // Upsert 新增或覆盖单张图片（调用方负责事务与 revision）。
 func Upsert(q store.Querier, name string, bytes []byte, at int64) error {
 	_, err := q.Exec(
-		"INSERT INTO images (name, bytes, updated_at) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET bytes = excluded.bytes, updated_at = excluded.updated_at",
+		"INSERT INTO images (name, bytes, updated_at) VALUES (?, ?, ?) AS new ON DUPLICATE KEY UPDATE bytes = new.bytes, updated_at = new.updated_at",
 		name, bytes, at,
 	)
 	return err

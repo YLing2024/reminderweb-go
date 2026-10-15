@@ -42,9 +42,15 @@ type LogLevel string
 
 // Config 运行时配置快照。
 type Config struct {
-	Host    string
-	Port    int
-	DataDir string
+	Host string
+	Port int
+	// 存储一律 MySQL：DB_DSN 非空时优先，否则由 Host/Port/Name/User/Password 拼装。
+	DBHost     string
+	DBPort     int
+	DBName     string
+	DBUser     string
+	DBPassword string
+	DBDSN      string
 	// StaticDir 后端直接服务的静态产物目录；嵌入式部署下仅作兼容占位。
 	StaticDir string
 
@@ -86,7 +92,12 @@ func (e *ConfigError) Error() string { return e.Message }
 type yamlConfig struct {
 	Host                  string   `yaml:"host"`
 	Port                  *int     `yaml:"port"`
-	DataDir               string   `yaml:"data_dir"`
+	DBHost                string   `yaml:"db_host"`
+	DBPort                *int     `yaml:"db_port"`
+	DBName                string   `yaml:"db_name"`
+	DBUser                string   `yaml:"db_user"`
+	DBPassword            string   `yaml:"db_password"`
+	DBDSN                 string   `yaml:"db_dsn"`
 	AuthMode              string   `yaml:"auth_mode"`
 	AuthUser              string   `yaml:"auth_user"`
 	AuthPassword          string   `yaml:"auth_password"`
@@ -230,9 +241,21 @@ func Load(get func(string) string) (*Config, error) {
 		return nil, err
 	}
 
-	dataDir := pick("DATA_DIR", yamlValues.DataDir)
-	if dataDir == "" {
-		dataDir = "./data"
+	dbHost := strings.TrimSpace(pick("DB_HOST", yamlValues.DBHost))
+	if dbHost == "" {
+		dbHost = "127.0.0.1"
+	}
+	dbPort, err := pickInt(pick("DB_PORT", intPtrString(yamlValues.DBPort)), "DB_PORT", 3306, 1, 65535)
+	if err != nil {
+		return nil, err
+	}
+	dbName := strings.TrimSpace(pick("DB_NAME", yamlValues.DBName))
+	if dbName == "" {
+		dbName = "reminderweb"
+	}
+	dbUser := strings.TrimSpace(pick("DB_USER", yamlValues.DBUser))
+	if dbUser == "" {
+		dbUser = "reminderweb"
 	}
 	authUser := pick("AUTH_USER", yamlValues.AuthUser)
 	if authUser == "" {
@@ -244,7 +267,12 @@ func Load(get func(string) string) (*Config, error) {
 	return &Config{
 		Host:                  host,
 		Port:                  port,
-		DataDir:               dataDir,
+		DBHost:                dbHost,
+		DBPort:                dbPort,
+		DBName:                dbName,
+		DBUser:                dbUser,
+		DBPassword:            pick("DB_PASSWORD", yamlValues.DBPassword),
+		DBDSN:                 strings.TrimSpace(pick("DB_DSN", yamlValues.DBDSN)),
 		StaticDir:             filepath.Join(cwd, "dist"),
 		AuthMode:              authMode,
 		AuthUser:              authUser,
@@ -407,8 +435,12 @@ func IsWeakAuthPassword(cfg *Config) bool {
 	return cfg.AuthPassword == "changeme" || len(cfg.AuthPassword) < 8
 }
 
-// Describe 生成启动摘要（不含任何敏感值）。
+// Describe 生成启动摘要（不含任何敏感值，绝不含 DB 口令）。
 func (c *Config) Describe() string {
+	databaseDesc := fmt.Sprintf("%s:%d/%s", c.DBHost, c.DBPort, c.DBName)
+	if c.DBDSN != "" {
+		databaseDesc = "由 DB_DSN 指定"
+	}
 	staticDesc := "关闭"
 	if c.ServeStatic {
 		staticDesc = c.StaticDir
@@ -431,7 +463,7 @@ func (c *Config) Describe() string {
 	return strings.Join([]string{
 		fmt.Sprintf("监听 http://%s:%d", c.Host, c.Port),
 		"认证模式 " + string(c.AuthMode),
-		"数据目录 " + c.DataDir,
+		"数据库 " + databaseDesc,
 		"静态文件 " + staticDesc,
 		"WebDAV " + webdavDesc,
 		"CORS " + corsDesc,

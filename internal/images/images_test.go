@@ -3,7 +3,7 @@ package images
 import (
 	"testing"
 
-	"reminderweb-go/internal/store"
+	"reminderweb-go/internal/store/storetest"
 )
 
 func TestIsValidImageName(t *testing.T) {
@@ -28,11 +28,7 @@ func TestIsValidImageName(t *testing.T) {
 }
 
 func TestImageCRUD(t *testing.T) {
-	db, err := store.OpenPath(":memory:")
-	if err != nil {
-		t.Fatalf("打开内存库失败：%v", err)
-	}
-	t.Cleanup(func() { _ = db.Close() })
+	db := storetest.Open(t)
 	q := db.SQL()
 
 	// 空集必须是 []，不能是 nil（前端直接读 .length）。

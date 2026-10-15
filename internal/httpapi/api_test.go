@@ -13,20 +13,17 @@ import (
 	"reminderweb-go/internal/auth"
 	"reminderweb-go/internal/config"
 	"reminderweb-go/internal/store"
+	"reminderweb-go/internal/store/storetest"
 )
 
-// testServer 用真实路由挂一个内存库的 Server；static 为可选的嵌入产物替身。
+// testServer 用真实路由挂一个独占 MySQL 测试库的 Server；static 为可选的嵌入产物替身。
 func testServer(t *testing.T, env map[string]string, static fstest.MapFS) (*Server, *store.DB) {
 	t.Helper()
 	cfg, err := config.Load(func(key string) string { return env[key] })
 	if err != nil {
 		t.Fatalf("加载测试配置失败：%v", err)
 	}
-	db, err := store.OpenPath(":memory:")
-	if err != nil {
-		t.Fatalf("打开内存库失败：%v", err)
-	}
-	t.Cleanup(func() { _ = db.Close() })
+	db := storetest.Open(t)
 
 	options := Options{
 		Config:      cfg,

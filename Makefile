@@ -19,18 +19,18 @@ build: web
 	CGO_ENABLED=0 go build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/reminderweb-go
 
 test: web
-	go test $(PKGS) -count=1
+	scripts/test-mysql.sh go test $(PKGS) -count=1
 
 race: web
-	go test $(PKGS) -count=1 -race
+	scripts/test-mysql.sh go test $(PKGS) -count=1 -race
 
 vet: web
 	go vet ./...
 
-# 机检路由↔文档一致 + vet + 单测（聚合门禁）。
+# 机检路由↔文档一致 + vet + 单测（聚合门禁）；单测跑在一次性 MySQL 容器上。
 check: web vet
 	node scripts/check-api-docs.mjs
-	go test $(PKGS) -count=1
+	scripts/test-mysql.sh go test $(PKGS) -count=1
 
 fmt:
 	gofmt -l .

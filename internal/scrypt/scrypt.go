@@ -1,7 +1,7 @@
 // Package scrypt 是 RFC 7914 scrypt 的纯标准库实现。
 //
-// 为什么自己实现而不引 golang.org/x/crypto：本重写只允许 `modernc.org/sqlite` 与
-// `gopkg.in/yaml.v3` 两个第三方依赖，而既有 users 表里的口令哈希是旧 Node 实现用
+// 为什么自己实现而不引 golang.org/x/crypto：本重写的第三方依赖只有
+// `github.com/go-sql-driver/mysql` 与 `gopkg.in/yaml.v3`，而既有 users 表里的口令哈希是旧 Node 实现用
 // crypto.scrypt(N=16384,r=8,p=1,keyLen=32) 生成的，必须能原样校验，因此需要 scrypt。
 // 实现只依赖 crypto/sha256 与 crypto/hmac，参数与旧实现对齐。
 package scrypt

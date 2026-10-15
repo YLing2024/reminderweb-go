@@ -97,8 +97,8 @@ func upsertKind(q store.Querier, table string, outcome MergeOutcome, kind wire.K
 		items = outcome.Tags
 	}
 	statement := fmt.Sprintf(
-		`INSERT INTO %s (id, payload, updated_at, deleted) VALUES (?, ?, ?, ?)
-		 ON CONFLICT(id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at, deleted = excluded.deleted`,
+		`INSERT INTO %s (id, payload, updated_at, deleted) VALUES (?, ?, ?, ?) AS new
+		 ON DUPLICATE KEY UPDATE payload = new.payload, updated_at = new.updated_at, deleted = new.deleted`,
 		table,
 	)
 	for _, item := range items {
@@ -138,7 +138,7 @@ func WriteMergedData(db *store.DB, outcome MergeOutcome) (int64, error) {
 		return 0, err
 	}
 	if _, err := tx.Exec(
-		"INSERT INTO settings (k, payload, updated_at) VALUES (?, ?, ?) ON CONFLICT(k) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at",
+		"INSERT INTO settings (k, payload, updated_at) VALUES (?, ?, ?) AS new ON DUPLICATE KEY UPDATE payload = new.payload, updated_at = new.updated_at",
 		"app", encodePayload(outcome.Settings), outcome.Settings.UpdatedAt,
 	); err != nil {
 		return 0, err

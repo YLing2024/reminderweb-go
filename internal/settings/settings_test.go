@@ -5,6 +5,7 @@ import (
 
 	"reminderweb-go/internal/config"
 	"reminderweb-go/internal/store"
+	"reminderweb-go/internal/store/storetest"
 )
 
 func testConfig(t *testing.T, env map[string]string) *config.Config {
@@ -18,12 +19,7 @@ func testConfig(t *testing.T, env map[string]string) *config.Config {
 
 func openTestDB(t *testing.T) *store.DB {
 	t.Helper()
-	db, err := store.OpenPath(":memory:")
-	if err != nil {
-		t.Fatalf("打开内存库失败：%v", err)
-	}
-	t.Cleanup(func() { _ = db.Close() })
-	return db
+	return storetest.Open(t)
 }
 
 func TestToViewNeverExposesPassword(t *testing.T) {

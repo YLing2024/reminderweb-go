@@ -5,18 +5,14 @@ import (
 
 	"reminderweb-go/internal/images"
 	"reminderweb-go/internal/store"
+	"reminderweb-go/internal/store/storetest"
 	"reminderweb-go/internal/wire"
 )
 
-// newTestDB 打开一个内存库；store 的 schema / PRAGMA 与生产一致。
+// newTestDB 打开一个独占的 MySQL 测试库；schema 与生产迁移一致。
 func newTestDB(t *testing.T) *store.DB {
 	t.Helper()
-	db, err := store.OpenPath(":memory:")
-	if err != nil {
-		t.Fatalf("打开内存库失败：%v", err)
-	}
-	t.Cleanup(func() { _ = db.Close() })
-	return db
+	return storetest.Open(t)
 }
 
 func TestWriteMergedDataBumpsRevisionOnlyOnChange(t *testing.T) {

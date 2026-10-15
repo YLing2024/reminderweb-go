@@ -1,6 +1,6 @@
 // Package settings 实现服务器级 WebDAV 设置（旧 server/src/server-settings.ts）。
 //
-// 服务器模式下，页面上可直接修改 WebDAV 连接与自动同步参数；这些值存在 SQLite 的 meta 表里，
+// 服务器模式下，页面上可直接修改 WebDAV 连接与自动同步参数；这些值存在 MySQL 的 meta 表里，
 // 对所有设备一致。环境变量退化为「首次默认值」：库里还没有值时用环境变量落库；之后一律以库值为准。
 // 优先级：库值 > 环境变量 > 内置默认。口令只进库、绝不回传前端明文。
 package settings
