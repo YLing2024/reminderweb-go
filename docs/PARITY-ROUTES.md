@@ -31,8 +31,9 @@
 - 两边均 `AUTH_MODE=sso`、`AUTH_USER=linden`，请求带 `X-Auth-User: linden`。
 - 全程只监听回环，未触碰 `18940` / `19240`，未动 systemd 与 nginx；取证结束即停两个临时实例。
 
-矩阵共 81 组 `(方法, 路径)`（`GET/PUT/POST/PATCH/DELETE/HEAD/PROPFIND/MKCOL/OPTIONS`），
-**状态码逐条一致，差异为 0**。对应回归固定在 `internal/httpapi/routing_test.go`。
+矩阵覆盖 `GET/PUT/POST/PATCH/DELETE/HEAD/PROPFIND/MKCOL/OPTIONS` 九种动词与各类命中/未命中路径
+（留存两次取证共 77 次请求、72 个不同的「方法 + 路径」组合），
+**状态码与错误码逐条一致，差异为 0**。对应回归固定在 `internal/httpapi/routing_test.go`。
 下面表格的状态码取自该次实测（已鉴权、带常规请求体的代表值）。
 
 ## 逐路由对照表
@@ -92,7 +93,7 @@
 
 ## 结论
 
-- 已对照的 81 组 `(方法, 路径)` 状态码 **全部一致**，无残留不一致项。
+- 已对照的各组 `(方法, 路径)` 状态码 **全部一致**，无残留不一致项。
 - 唯一与任务书文字预期冲突的点是 `/api/webdav/config` 的 `HEAD/POST/PATCH/DELETE`：实测旧实现为
   `400/405/405/400`，新实现逐条一致；任务书所述的 `404` 系对旧 `dispatch` 的误读，未采纳。
 - 回归用例见 `internal/httpapi/routing_test.go`（`TestRouteTableParity`、`TestUnmatchedRouteAuthOrdering`）。
