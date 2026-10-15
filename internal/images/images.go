@@ -51,7 +51,8 @@ func ReadNames(q store.Querier) ([]string, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var out []string
+	// 显式空切片：对外 JSON 必须是 []，不能是 null（旧实现恒为数组，前端据此直接 .length）。
+	out := []string{}
 	for rows.Next() {
 		var name string
 		if err := rows.Scan(&name); err != nil {
@@ -69,7 +70,8 @@ func ReadAll(q store.Querier) ([]StoredImage, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var out []StoredImage
+	// 与 ReadNames 同理：空集序列化为 []，避免 /api/data/full 出现 null。
+	out := []StoredImage{}
 	for rows.Next() {
 		var name string
 		var bytes []byte

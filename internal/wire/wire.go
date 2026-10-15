@@ -32,16 +32,18 @@ var repeatUnits = map[string]bool{"DAY": true, "WEEK": true, "MONTH": true, "YEA
 type Item map[string]any
 
 // Tombstone 墓碑（删除标记），用 Kind 区分提醒 / 标签。
+// JSON 字段名必须与旧实现 / 前端一致（小驼峰），否则前端解析不到墓碑。
 type Tombstone struct {
-	ID        int64
-	UpdatedAt int64
-	Kind      Kind
+	ID        int64 `json:"id"`
+	UpdatedAt int64 `json:"updatedAt"`
+	Kind      Kind  `json:"kind"`
 }
 
 // SettingsEnvelope 设置信封：整体作为一个可比较更新的条目。
+// 同上：`value` / `updatedAt` 是前后端约定的字段名，不得改成 Go 默认的大写。
 type SettingsEnvelope struct {
-	Value     map[string]any
-	UpdatedAt int64
+	Value     map[string]any `json:"value"`
+	UpdatedAt int64          `json:"updatedAt"`
 }
 
 // ClientData 是 `PUT /api/data` 请求体的解析结果。
