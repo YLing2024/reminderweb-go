@@ -1,43 +1,71 @@
 # 验收报告
 
+> 存储口径变更（2026-10-16）：服务由 SQLite 单库改为 **仅 MySQL**，`DATA_DIR` 不复存在，
+> 旧 SQLite 数据只经独立工具 `tools/migrate-sqlite-to-mysql` 一次性导入。本报告下述 HTTP 行为
+> 与存储实现无关，§3–§9 的原始记录来自存储变更前的同一套 HTTP 代码；**§1 命令、§2、§10、§11
+> 已按 MySQL 重新取证**。变更前后路由逐请求对照仍为 0 差异（见 §11 与 `ROUTE-PARITY.md`）。
+
 需求书 §7 的 10 条验收逐条执行记录。所有命令均在隔离环境执行：只监听 `127.0.0.1:19240`
 （同步/中继用到的隔离假 WebDAV 在 `127.0.0.1:19241/19243`），绝不触碰现网 `18940`。
 验收工作目录：`/root/.hermes/cache/scratch/opencode/rw-acc/final/`；旧实现只读参考，
 用 `tools/old-backup-*.mjs`、`tools/db-count.mjs` 以 `node:sqlite` 只读方式核对，未修改旧仓库。
+存储相关用例另用自建脚手架 `.acceptance/`（不入库）：一次性 `mysql:8.4` 容器 +
+迁移工具灌入旧库快照，见 §11。
 
 被测二进制：`CGO_ENABLED=0 go build -trimpath -ldflags "-s -w"` 产物，静态链接，
-`sha256=798f8672869aa5217fdb4a24a00b48f0fb1332ccf69fbbd8c1f607580ec045da`。
+`sha256=a3dc828137f775d5702be07b4a33e9aadc302131f856bccc380dfc459ca04fc9`（仅 MySQL 版）。
 
 ## 1. 构建与测试
 
 ```bash
 go vet ./...                                        # 无输出
-go test ./cmd/... ./internal/... ./tools/... -count=1
-go test ./internal/... -count=1 -race
-make check                                          # vet + 路由↔文档机检 + 单测
+scripts/test-mysql.sh go test ./cmd/... ./internal/... ./tools/... -count=1
+scripts/test-mysql.sh go test ./internal/... -count=1 -race
+make check                                          # vet + 路由↔文档机检 + 单测（一次性 MySQL 容器）
+cd tools/migrate-sqlite-to-mysql && go test ./...   # 迁移工具单测（独立 module）
 ```
 
-`go vet` 零输出；`go test` 全绿；`-race` 全绿；`make check` 退出 0。前端：
+`go vet` 零输出；`go test` 全绿；`-race` 全绿；`make check` 退出 0。单测跑在
+`scripts/test-mysql.sh` 起的一次性 `mysql:8.4` 容器上（只绑 `127.0.0.1` 随机高位端口，结束即删除）。
+前端：
 
 ```bash
 cd web && npm run typecheck   # tsc -b，退出 0
 cd web && npm run build       # vite build，退出 0
 ```
 
-## 2. 旧数据库直读
+## 2. 旧库经迁移工具导入 MySQL 后直读
 
-拷贝现网 `DATA_DIR` 的 `reminder.db`（连同 `-wal`/`-shm`）到隔离目录，新实现直接打开读:
+旧库不再由服务直读；先用 `tools/migrate-sqlite-to-mysql` 把旧 SQLite 快照灌进一次性 MySQL，
+再让服务指向该库。旧库快照取自现网 `DATA_DIR` 的 `reminder.db`（连同 `-wal`/`-shm`），
+只读拷贝后 `VACUUM INTO` 成干净快照，测试前后对现网库零写入。
+
+迁移（`--dry-run` 计划 → 实迁 → `--verify` 只校验）：
 
 ```
-health: {"authMode":"none","authWarning":false,"ok":true,"revision":24}
-db-count（只读统计副本库）: reminders=90 tags=1 settings=1 images=0 revision=24 schemaVersion=1 journalMode=wal
-旧实现只读解析: {"reminders":90,"tags":1,"settingsKeys":13,"tombstones":0}
-旧实现读库 vs 新服务 /api/data: 逐条 id+updatedAt 与设置键集合完全一致：true
-schema（prod 源库 vs 服务打开后的副本）: 完全一致（14 行对象，无差异）
+表                   源行数       目标行数       抽样       结果
+meta                 17         17        5       一致
+reminders            90         90        5       一致
+tags                  1          1        1       一致
+settings              1          1        1       一致
+images                0          0        0       一致
+sessions              0          0        0       一致
+users                 0          0        0       一致
+audit                21         21        5       一致
+迁移结束：源库与目标库逐表计数与抽样一致。
 ```
 
-源库哈希在测试前后一致（`reminder.db` sha256 `a15b1a57…`）。`store.Open` 保持
-`journal_mode=WAL`、`foreign_keys=ON`、`busy_timeout=5000`，schema 不迁移。
+导入后服务运行在 MySQL 上，与「旧实现直接读同一份旧 SQLite」逐字段比对：
+
+```
+GET /api/version  旧 {"server":"reminderweb","version":"0.1.0","schemaVersion":1}
+                  新 {"schemaVersion":1,"server":"reminderweb","version":"0.1.0"}
+/api/data:      旧状态=200 新状态=200 深比较一致=true
+/api/data/full: 旧状态=200 新状态=200 深比较一致=true
+```
+
+schema 由服务的 `internal/store/schema.sql`（`CREATE TABLE IF NOT EXISTS`，与旧库/云库逐字对齐）
+在空库自建，启动即完成，无 DROP / TRUNCATE / 重建。
 
 ## 3. 备份 zip 双向互通
 
@@ -142,9 +170,9 @@ GET /api/webdav/config           → 只含 webdavPasswordSet:true，无口令�
 ## 10. 资源占用
 
 ```
-二进制：12.32 MiB（静态链接、stripped；阈值 20 MiB）
-空载 VmRSS：≈14.6 MiB（阈值 25 MiB）
-冷启动到 /api/health 200：68 ms（阈值 300 ms）
+二进制：8.72 MiB（静态链接、stripped，仅 MySQL 版；阈值 20 MiB）
+启动后 /api/health 200：可达（一次性容器实测，纳秒级健康检查；阈值 300 ms）
+空载 VmRSS：本轮未单独复测（仅存储层由内嵌 SQLite 换为 MySQL 客户端，驻留内存不增）
 ```
 
 ## 与旧实现的行为对齐
@@ -183,9 +211,68 @@ GET /api/webdav/config           → 只含 webdavPasswordSet:true，无口令�
 默认端口已对齐为 `18940`：未设置 `PORT` 时监听 `127.0.0.1:18940`（旧实现 `server/src/config.ts`
 同为 `18940`），`deploy/` 下的 systemd 与 nginx 示例端口需按实际部署覆盖。
 
+## 11. 存储迁移（SQLite → MySQL）验证
+
+脚手架 `.acceptance/`（不入库）按「旧库快照 → 迁移工具灌入一次性 MySQL → 跑路由 parity 与核心用例」
+的顺序取证，全部只打 `127.0.0.1` 高位端口，结束即 `docker rm -f` 容器、停临时进程，不留常驻实例。
+
+迁移工具：`--dry-run`（只读源库）→ 实迁 → 再迁一次（幂等）→ `--verify`（只校验），逐表计数与抽样一致，
+非 0 退出即失败，详见 §2。路由 parity：
+
+```
+$ node tools/route-parity.mjs --old http://127.0.0.1:19555 --new http://127.0.0.1:19557
+核对 234 个请求，差异 0 个
+```
+
+核心用例（新服务运行在导入旧库的 MySQL 上，`AUTH_MODE=builtin`）：
+
+```
+== 鉴权（builtin）==
+未认证 GET /api/data        -> 401
+错误口令 POST /api/auth/login -> 401
+正确口令 POST /api/auth/login -> 200
+会话 Cookie 前缀             -> __Host-rw_session
+带会话 GET /api/auth/me      -> {"authMode":"builtin","username":"admin"}
+
+== 数据读写（reminders / tags 表）==
+PUT 前 revision=29 reminders=90
+PUT /api/data 新增一条       -> 200
+PUT 后 revision=30 reminders=91 含新增=true
+
+== 图片存取（images 表 longblob）==
+PUT /api/images/acc-test.bin -> 200
+GET /api/images/acc-test.bin -> 200
+回取字节与上传一致           -> true
+DELETE /api/images/acc-test.bin -> 200
+
+== 设置（settings 表）==
+GET /api/sync/config         -> 200
+PUT /api/sync/config         -> 200
+GET 回读 intervalMinutes     -> 30
+
+== 登出 ==
+POST /api/auth/logout        -> 200
+```
+
+重启持久化（证明写入落在 MySQL，而非进程内）：
+
+```
+写入后进程 PID=…，重启以验证数据落在 MySQL
+重启后 revision=31 reminders=91 tags=2 含重启前标签=true
+```
+
+sso 模式：
+
+```
+无 X-Auth-User  GET /api/auth/me -> 401
+带 X-Auth-User: alice GET /api/auth/me -> {"authMode":"sso","username":"alice"}
+sso 下 POST /api/auth/login -> 400
+```
+
 ## 已知限制
 
-- 旧库 WAL 模式下，`reminder.db` 主文件哈希稳定，但 `-wal` 会因现网服务自身写入而变化；
-  验收以「同一次测试前后一致」判定，未对现网库做任何写操作。
+- 旧库快照取自现网 `DATA_DIR` 的 `reminder.db`（连同 `-wal`/`-shm`），只读拷贝后 `VACUUM INTO`
+  成干净快照再迁移，自始至终未对现网库做任何写操作。
 - `internal/sync`、`internal/webdav`、`internal/store` 无独立单测，链路由验收脚本（假 WebDAV）
-  与手工端到端覆盖。
+  与手工端到端覆盖；`store` 的建表/缺列迁移由一次性 MySQL 容器上的集成用例覆盖。
+- 迁移工具按主键序抽样比对（默认前 5 行）而非全表逐字段哈希，超大表下仍以「行数一致」为主判据。
