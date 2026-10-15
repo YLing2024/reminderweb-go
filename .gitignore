@@ -2,6 +2,7 @@
 /reminderweb-go
 /bin/
 /tools/fakedav/fakedav
+/tools/migrate-sqlite-to-mysql/migrate-sqlite-to-mysql
 # 逐路由取证用的临时二进制（旧/新实现对比），绝不入库
 /.parity-bin
 
