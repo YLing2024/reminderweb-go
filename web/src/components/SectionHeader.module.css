@@ -1,0 +1,57 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  background: var(--app-tint);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px 8px 8px;
+  min-height: 56px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.header:hover {
+  background: var(--app-tint-strong);
+}
+
+.badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.title {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.count {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 14px;
+  background: var(--count-pill-bg);
+  color: var(--count-pill-text);
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chevron {
+  transition: transform 0.18s ease;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.chevronCollapsed {
+  transform: rotate(-90deg);
+}

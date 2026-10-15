@@ -1,0 +1,14 @@
+/*
+ * 自托管手写体：Dancing Script（SIL Open Font License 1.1）。
+ *
+ * 仓库内为按 "Reminder" 所需字形（R d e i m n r）裁出的 woff2 子集，本地加载、不走 CDN。
+ * 许可全文见同目录 DancingScript-OFL.txt；来源：Google Fonts / The Dancing Script Project Authors。
+ * 字体缺失或加载失败时，字标回退到 --font-wordmark 里的衬线斜体兜底，不会白屏或报错。
+ */
+@font-face {
+  font-family: 'Dancing Script';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../assets/fonts/dancing-script-reminder.woff2') format('woff2');
+}

@@ -1,0 +1,72 @@
+.card {
+  border-radius: var(--radius-group);
+  padding: 16px;
+  background: var(--md-sys-color-surface-container);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+}
+
+.rowTitle {
+  font-size: 15px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.rowValue {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+}
+
+.hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.warn {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--md-sys-color-error);
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.option,
+.active {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 22px;
+  border: 1px solid var(--md-sys-color-outline);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.option {
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+}
+
+.active {
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.option:disabled,
+.active:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

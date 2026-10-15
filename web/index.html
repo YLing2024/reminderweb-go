@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#6750A4" />
+    <script>
+      // 首屏防闪：读取上次解析出的明暗结果，在 React 启动前先给 html 打上
+      // data-theme / color-scheme 与一个中性底色，避免先白后暗。
+      // 真正的调色板仍由 ThemeController 在 React 启动后应用，此处只做最小必要的防闪。
+      (function () {
+        try {
+          var root = document.documentElement;
+          var stored = null;
+          try {
+            stored = window.localStorage.getItem('reminderweb:resolved-theme');
+          } catch (e) {}
+          var dark;
+          if (stored === 'dark') {
+            dark = true;
+          } else if (stored === 'light') {
+            dark = false;
+          } else {
+            dark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          }
+          var neutral = dark ? '#1c1b1f' : '#f7f5fa';
+          root.dataset.theme = dark ? 'dark' : 'light';
+          root.style.colorScheme = dark ? 'dark' : 'light';
+          root.style.setProperty('--app-page-bg', neutral);
+          root.style.backgroundColor = neutral;
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Reminder" />
+    <title>Reminder</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

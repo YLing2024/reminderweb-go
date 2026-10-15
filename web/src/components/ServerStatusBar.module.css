@@ -1,0 +1,47 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px var(--space-page-x);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.bar[data-kind='client'] {
+  background: color-mix(in srgb, var(--md-sys-color-secondary) 16%, var(--md-sys-color-surface));
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.bar[data-kind='action'] {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.bar[data-kind='error'] {
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+
+.text {
+  min-width: 0;
+}
+
+.action {
+  padding: 5px 12px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

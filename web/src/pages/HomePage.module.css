@@ -1,0 +1,223 @@
+.page {
+  min-height: 100%;
+  padding-bottom: 40px;
+}
+
+.content {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 8px var(--space-page-x) 120px;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  padding-top: env(safe-area-inset-top, 0);
+  transition: transform 0.2s ease;
+}
+
+.topBarHidden {
+  transform: translateY(-120%);
+}
+
+.wordmark {
+  font-family: var(--font-wordmark);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 34px;
+  line-height: 1.1;
+  color: var(--md-sys-color-on-surface);
+  white-space: nowrap;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 视图切换：手机档用左下 FAB；≥600px 改为顶栏分段控件，避免被左侧导航遮挡 */
+.viewSwitch {
+  display: none;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.viewSwitchButton,
+.viewSwitchActive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+}
+
+.viewSwitchActive {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.status {
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 32px 0;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 4%, var(--md-sys-color-surface));
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  text-align: left;
+}
+
+.listDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.listTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+}
+
+.listDays {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  flex: none;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 64px 16px;
+  text-align: center;
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 17px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.primaryButton {
+  border: none;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border-radius: 24px;
+  padding: 12px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.fab {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0));
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  border: none;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  z-index: 30;
+}
+
+.fabRight {
+  right: 20px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.fabLeft {
+  left: 20px;
+}
+
+/* 平板/桌面：内容让出左侧导航空间，FAB 下移到右下 */
+@media (min-width: 600px) {
+  .content {
+    padding-left: calc(80px + var(--space-page-x));
+    padding-right: var(--space-page-x);
+  }
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .fab {
+    bottom: 24px;
+  }
+  /* ≥600px 顶栏内提供分段控件，左下 FAB 让位（否则会被固定导航轨盖住） */
+  .viewSwitch {
+    display: inline-flex;
+  }
+  .fabLeft {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content {
+    padding-left: calc(220px + var(--space-page-x));
+  }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 18px;
+  }
+}

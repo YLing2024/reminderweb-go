@@ -1,0 +1,194 @@
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--md-sys-color-on-surface);
+}
+
+.iconButton:hover {
+  background: var(--app-tint);
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.iconButton:disabled:hover {
+  background: transparent;
+}
+
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
+  border: none;
+  background: var(--md-sys-color-surface-variant);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.18s ease;
+  flex: none;
+}
+
+.toggleOn {
+  background: var(--md-sys-color-primary);
+}
+
+.toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.toggleOn .toggleThumb {
+  transform: translateX(20px);
+}
+
+.menuBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.menu {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  width: 100%;
+  max-width: 420px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
+}
+
+@media (min-width: 600px) {
+  .menuBackdrop {
+    align-items: stretch;
+  }
+  .menu {
+    position: fixed;
+    border-radius: 16px;
+    padding: 6px;
+    max-width: 220px;
+    width: auto;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.24);
+  }
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  text-align: left;
+  min-height: 44px;
+  width: 100%;
+}
+
+.menuItem:hover {
+  background: var(--app-tint);
+}
+
+.menuItemDanger {
+  color: var(--md-sys-color-error);
+}
+
+.dialogBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.dialog {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-group);
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dialogTitle {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.dialogMessage {
+  margin: 0 0 20px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.dialogInput {
+  width: 100%;
+  min-height: 48px;
+  margin-bottom: 20px;
+  padding: 0 14px;
+  border-radius: var(--radius-input);
+  border: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font-size: 16px;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.textButton {
+  border: none;
+  background: transparent;
+  padding: 10px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  min-height: 44px;
+}
+
+.textButton:hover {
+  background: var(--app-tint);
+}
+
+.textButtonPrimary {
+  color: var(--md-sys-color-primary);
+}
+
+.textButtonDanger {
+  color: var(--md-sys-color-error);
+}

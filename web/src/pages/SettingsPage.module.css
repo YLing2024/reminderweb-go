@@ -1,0 +1,393 @@
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 64px;
+  padding: env(safe-area-inset-top, 0) var(--space-page-x) 0;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px var(--space-page-x) 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  color: var(--md-sys-color-on-surface);
+  font-size: 14px;
+}
+
+.noticeClose {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.group {
+  margin-top: 16px;
+}
+
+.groupTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.groupDivider {
+  height: 1px;
+  margin-bottom: 12px;
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent);
+}
+
+.card {
+  border-radius: var(--radius-group);
+  padding: 16px;
+  background: var(--md-sys-color-surface-container);
+}
+
+.cardTitle {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--md-sys-color-surface-variant) 40%, transparent);
+}
+
+.segment,
+.segmentActive {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  min-height: 40px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.segmentActive {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-weight: 600;
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.subBlock {
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--md-sys-color-on-surface) 7%, transparent);
+}
+
+.switchRow + .switchRow,
+.switchRow + .subBlock {
+  border-top: 1px solid color-mix(in srgb, var(--md-sys-color-on-surface) 7%, transparent);
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rowTitle {
+  margin: 0;
+  font-size: 16px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.rowTitleDanger {
+  margin: 0;
+  font-size: 16px;
+  color: var(--md-sys-color-error);
+}
+
+.rowDesc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.subLabel {
+  margin: 16px 0 10px;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.seedRow {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.seedItem {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.seedDot {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+}
+
+.seedDotActive {
+  border-color: var(--md-sys-color-primary);
+}
+
+.seedCustom {
+  overflow: hidden;
+}
+
+.seedColorInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.seedLabel {
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.seedLabelActive {
+  font-size: 12px;
+  color: var(--md-sys-color-primary);
+  font-weight: 600;
+}
+
+.numberRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.numberInput {
+  width: 88px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: var(--radius-input);
+  border: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font-size: 16px;
+}
+
+.numberUnit {
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 12px 0;
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--md-sys-color-on-surface) 7%, transparent);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.actionRow:first-child {
+  border-top: none;
+}
+
+.actionIcon {
+  flex: none;
+  display: inline-flex;
+  color: var(--md-sys-color-primary);
+}
+
+.actionValue {
+  flex: none;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.chevron {
+  flex: none;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.dialogBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.dialog {
+  background: var(--md-sys-color-surface-container-high);
+  border-radius: var(--radius-group);
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dialogTitle {
+  margin: 0 0 16px;
+  font-size: 20px;
+}
+
+.choiceList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  text-align: left;
+}
+
+.choice:hover {
+  background: var(--app-tint);
+}
+
+.radioOn,
+.radioOff {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.radioOn {
+  border: 6px solid var(--md-sys-color-primary);
+}
+
+.radioOff {
+  border: 2px solid var(--md-sys-color-outline);
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.textButton {
+  border: none;
+  background: transparent;
+  padding: 10px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  min-height: 44px;
+}
+
+.textButton:hover {
+  background: var(--app-tint);
+}
+
+.textButtonPrimary {
+  color: var(--md-sys-color-primary);
+}
+
+.textButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.passwordHint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* 密码字段之间的间距（PasswordField 根节点为 label）。 */
+.dialog label {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.dialogError {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--md-sys-color-error);
+}

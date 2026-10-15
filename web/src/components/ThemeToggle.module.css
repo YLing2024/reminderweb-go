@@ -1,0 +1,65 @@
+/*
+ * 顶栏主题切换控件。宽屏为三选项分段控件，窄屏收起为单个循环按钮，
+ * 保证三态都能选到且不挤压顶栏字标与图标按钮。
+ */
+.cycle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+}
+
+.cycle:hover {
+  background: var(--app-tint);
+}
+
+.group {
+  display: none;
+  align-items: center;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.item,
+.itemActive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+}
+
+.itemActive {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.icon {
+  display: inline-flex;
+}
+
+.label {
+  font-size: 13px;
+}
+
+@media (min-width: 600px) {
+  .cycle {
+    display: none;
+  }
+
+  .group {
+    display: inline-flex;
+  }
+}

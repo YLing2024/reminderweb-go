@@ -1,0 +1,108 @@
+/*
+ * 设计令牌。M3 全板由 material-color-utilities 按种子色在运行时生成，
+ * 并以内联变量写回 :root（见 src/lib/theme.ts）。此处提供：
+ * - 首帧/无种子时的基线回退值（M3 基线紫）；
+ * - 由 `--md-sys-color-*` 派生的语义令牌与几何令牌。
+ * 规则：所有颜色只允许通过 `--md-sys-color-*` 或本文件的派生令牌使用。
+ */
+:root {
+  color-scheme: light;
+
+  --md-sys-color-primary: #6750a4;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #eaddff;
+  --md-sys-color-on-primary-container: #21005d;
+  --md-sys-color-secondary: #625b71;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #e8def8;
+  --md-sys-color-on-secondary-container: #1d192b;
+  --md-sys-color-tertiary: #7d5260;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #ffd8e4;
+  --md-sys-color-on-tertiary-container: #31111d;
+  --md-sys-color-error: #b3261e;
+  --md-sys-color-on-error: #ffffff;
+  --md-sys-color-error-container: #f9dedc;
+  --md-sys-color-on-error-container: #410e0b;
+  --md-sys-color-surface: #f7f5fa;
+  --md-sys-color-on-surface: #1d1b20;
+  --md-sys-color-surface-variant: #e7e0ec;
+  --md-sys-color-on-surface-variant: #49454f;
+  --md-sys-color-outline: #79747e;
+  --md-sys-color-outline-variant: #cac4d0;
+  --md-sys-color-inverse-surface: #322f35;
+  --md-sys-color-inverse-on-surface: #f5eff7;
+  --md-sys-color-inverse-primary: #d0bcff;
+
+  /* 派生容器层级：由 surface 与 primary 轻混，随种子色自适应。 */
+  --md-sys-color-surface-container-low: color-mix(in srgb, var(--md-sys-color-surface) 96%, var(--md-sys-color-primary) 4%);
+  --md-sys-color-surface-container: color-mix(in srgb, var(--md-sys-color-surface) 91%, var(--md-sys-color-primary) 9%);
+  --md-sys-color-surface-container-high: color-mix(in srgb, var(--md-sys-color-surface) 85%, var(--md-sys-color-primary) 15%);
+
+  --app-page-bg: var(--md-sys-color-surface);
+  --app-tint: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+  --app-tint-strong: color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent);
+
+  /* 卡片着色：默认开启，基于主题色叠层；关闭时用中性叠层。 */
+  --app-card-body-bg: color-mix(in srgb, var(--md-sys-color-primary) 7%, var(--md-sys-color-surface));
+  --app-card-footer-bg: color-mix(in srgb, var(--md-sys-color-primary) 13%, var(--md-sys-color-surface));
+
+  --type-annual: #1e88e5;
+  --type-count-up: #f28c20;
+  --type-birthday: #e53935;
+  --pinned-accent: #e91e63;
+  --neutral-badge: #9e9e9e;
+  --count-pill-bg: color-mix(in srgb, var(--md-sys-color-primary) 16%, var(--md-sys-color-surface));
+  --count-pill-text: var(--md-sys-color-primary);
+  --band-height: 44px;
+
+  --font-wordmark: 'Dancing Script', 'Segoe Script', 'Brush Script MT', cursive, serif;
+  --font-numeric: 'Helvetica Neue', Arial, system-ui, sans-serif;
+
+  --radius-card: 22px;
+  --radius-group: 24px;
+  --radius-pill: 20px;
+  --radius-input: 8px;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  --space-page-x: 16px;
+  --content-max: 1200px;
+}
+
+[data-card-coloring='off'] {
+  --app-card-body-bg: color-mix(in srgb, var(--md-sys-color-on-surface) 4%, var(--md-sys-color-surface));
+  --app-card-footer-bg: color-mix(in srgb, var(--md-sys-color-on-surface) 7%, var(--md-sys-color-surface));
+}
+
+@media (min-width: 600px) {
+  :root {
+    --space-page-x: 24px;
+    --content-max: 900px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --content-max: 1200px;
+  }
+}
+
+/* 深色回退板：运行时由 JS 用深色 scheme 覆盖 --md-sys-color-*；
+   此处仅补足 JS 未覆盖的强调色与明暗标记。 */
+[data-theme='dark'] {
+  color-scheme: dark;
+  --md-sys-color-primary: #d0bcff;
+  --md-sys-color-on-primary: #381e72;
+  --md-sys-color-primary-container: #4f378b;
+  --md-sys-color-on-primary-container: #eaddff;
+  --md-sys-color-surface: #1c1b1f;
+  --md-sys-color-on-surface: #e6e1e5;
+  --md-sys-color-surface-variant: #49454f;
+  --md-sys-color-on-surface-variant: #cac4d0;
+  --md-sys-color-outline: #938f99;
+  --md-sys-color-error: #f2b8b5;
+  --type-annual: #64b5f6;
+  --type-count-up: #f7a03a;
+  --type-birthday: #ef5350;
+}

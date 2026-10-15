@@ -1,0 +1,283 @@
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: env(safe-area-inset-top, 0) var(--space-page-x) 0;
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.searchField {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 6px 0 14px;
+  border-radius: 28px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 60%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface-variant) 30%, transparent);
+}
+
+.searchIcon {
+  flex: none;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 16px;
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 12px var(--space-page-x) 48px;
+}
+
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 55%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface-variant) 25%, transparent);
+  cursor: pointer;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.chipActive {
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 50%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  color: var(--md-sys-color-primary);
+}
+
+.chipCaret {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.chipClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.chipClear:hover {
+  background: var(--app-tint-strong);
+}
+
+.panel {
+  margin-top: 10px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 30%, transparent);
+  background: var(--md-sys-color-surface-container);
+}
+
+.panelLabel {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.panelDivider {
+  height: 1px;
+  margin: 16px 0;
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+}
+
+.panelHint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.optionWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 55%, transparent);
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.optionActive {
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 50%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent);
+  color: var(--md-sys-color-primary);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dateField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.dateField input {
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 55%, transparent);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+}
+
+.dateSep {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 14px;
+}
+
+.status {
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 32px 0;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 72px 16px;
+  text-align: center;
+}
+
+.emptyIcon {
+  color: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 45%, transparent);
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 17px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.emptyHint {
+  margin: 0;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 80%, transparent);
+}
+
+.results {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 16px;
+  background: var(--app-card-body-bg);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  text-align: left;
+}
+
+.row:hover {
+  background: var(--app-card-footer-bg);
+}
+
+.rowDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowTitle {
+  font-size: 16px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowMeta {
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowDays {
+  flex: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+}
