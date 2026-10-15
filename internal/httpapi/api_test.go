@@ -213,14 +213,39 @@ func TestStaticServingAndFallback(t *testing.T) {
 	if ct := root.Header().Get("Content-Type"); !strings.Contains(ct, "text/html") {
 		t.Fatalf("根路径 Content-Type = %q", ct)
 	}
+	// SPA 回退的 index.html 必须 no-cache（对齐旧实现 serveStatic 的回退分支）。
+	if cc := root.Header().Get("Cache-Control"); cc != "no-cache" {
+		t.Fatalf("SPA 回退 Cache-Control = %q，期望 no-cache", cc)
+	}
 	asset := do(t, handler, http.MethodGet, "/assets/index.js", "", nil)
 	if asset.Code != 200 || !strings.Contains(asset.Header().Get("Content-Type"), "javascript") {
 		t.Fatalf("静态资源响应错误：%d %q", asset.Code, asset.Header().Get("Content-Type"))
+	}
+	if cc := asset.Header().Get("Cache-Control"); cc != "public, max-age=3600" {
+		t.Fatalf("静态资源 Cache-Control = %q，期望 public, max-age=3600", cc)
 	}
 	// 带扩展名的缺失资源必须 404，不能回退 index.html。
 	missing := do(t, handler, http.MethodGet, "/assets/missing.js", "", nil)
 	if missing.Code != 404 {
 		t.Fatalf("缺失静态资源应 404，得到 %d", missing.Code)
+	}
+}
+
+// TestIndexHTMLCacheControl 锁定显式请求 /index.html 的缓存头：旧实现按「路径段非空」
+// 判定，直接命中的 index.html 与其它静态文件同为 public, max-age=3600，绝非 HTML 特例。
+func TestIndexHTMLCacheControl(t *testing.T) {
+	static := fstest.MapFS{"index.html": &fstest.MapFile{Data: []byte("<html>app</html>")}}
+	server, _ := testServer(t, map[string]string{"AUTH_MODE": "none"}, static)
+
+	rec := do(t, server.Handler(), http.MethodGet, "/index.html", "", nil)
+	if rec.Code != 200 {
+		t.Fatalf("GET /index.html 状态码 = %d，期望 200", rec.Code)
+	}
+	if cc := rec.Header().Get("Cache-Control"); cc != "public, max-age=3600" {
+		t.Fatalf("GET /index.html Cache-Control = %q，期望 public, max-age=3600", cc)
+	}
+	if ct := rec.Header().Get("Content-Type"); ct != "text/html; charset=utf-8" {
+		t.Fatalf("GET /index.html Content-Type = %q", ct)
 	}
 }
 

@@ -62,7 +62,7 @@ func (s *Server) serveStatic(w http.ResponseWriter, r *http.Request) {
 	candidate := strings.Join(segments, "/")
 	if candidate != "" {
 		if info, err := fs.Stat(s.static, candidate); err == nil && info.Mode().IsRegular() {
-			s.writeStaticFile(w, candidate, segments)
+			s.writeStaticFile(w, candidate, false)
 			return
 		}
 	}
@@ -72,23 +72,24 @@ func (s *Server) serveStatic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if info, err := fs.Stat(s.static, "index.html"); err == nil && info.Mode().IsRegular() {
-		s.writeStaticFile(w, "index.html", nil)
+		s.writeStaticFile(w, "index.html", true)
 		return
 	}
 	sendError(w, http.StatusNotFound, "not_found", nil, nil)
 }
 
-func (s *Server) writeStaticFile(w http.ResponseWriter, name string, segments []string) {
+// writeStaticFile 写静态文件响应。缓存规则对齐旧实现（server/src/http.ts `serveStatic`）：
+// 只有 SPA 回退（未知无扩展名路径回落到 index.html）才是 `no-cache`；
+// 直接命中的静态文件——包括显式请求 `/index.html`——一律 `public, max-age=3600`。
+// 旧实现按路径段是否为空区分，而非按文件类型，故 index.html 不是「HTML 特例」。
+func (s *Server) writeStaticFile(w http.ResponseWriter, name string, spaFallback bool) {
 	content, err := fs.ReadFile(s.static, name)
 	if err != nil {
 		sendError(w, http.StatusNotFound, "not_found", nil, nil)
 		return
 	}
 	cache := "public, max-age=3600"
-	if segments == nil || len(segments) == 0 {
-		cache = "no-cache"
-	}
-	if name == "index.html" {
+	if spaFallback {
 		cache = "no-cache"
 	}
 	w.Header().Set("Content-Type", contentTypeFor(name))
