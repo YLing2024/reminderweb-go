@@ -8,9 +8,12 @@ package webdav
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -51,6 +54,7 @@ const (
 	CodeNotFound   ErrorCode = "NOT_FOUND"
 	CodeNotWebdav  ErrorCode = "NOT_WEBDAV"
 	CodeNetwork    ErrorCode = "NETWORK"
+	CodeTimeout    ErrorCode = "TIMEOUT"
 	CodeHTTP       ErrorCode = "HTTP"
 )
 
@@ -226,19 +230,59 @@ func MapHTTPError(status int) *Error {
 	return &Error{Code: CodeHTTP, Message: fmt.Sprintf("服务器返回 %d", status), Status: status}
 }
 
+// mapFetchError 把底层传输错误映射为可展示的中文文案，尽量区分超时 / DNS / 证书 / 连接失败。
 func mapFetchError(err error) *Error {
 	var webdavErr *Error
 	if errors.As(err, &webdavErr) {
 		return webdavErr
 	}
+	// 超时：context 截止或底层 net.Error 超时。
 	if errors.Is(err, context.DeadlineExceeded) {
-		return &Error{Code: CodeNetwork, Message: "连接超时，请检查地址与网络"}
+		return &Error{Code: CodeTimeout, Message: "连接超时，请检查地址与网络"}
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return &Error{Code: CodeTimeout, Message: "连接超时，请检查地址与网络"}
+	}
+	// 主动取消（进程退出或上层取消）与真正的网络故障区分开。
+	if errors.Is(err, context.Canceled) {
+		return &Error{Code: CodeNetwork, Message: "请求被中断，请稍后重试"}
+	}
+	// DNS 解析失败。
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return &Error{Code: CodeNetwork, Message: "无法解析服务器域名，请检查地址与网络"}
+	}
+	// TLS 握手 / 证书校验失败。
+	var recordErr tls.RecordHeaderError
+	var unknownAuthority x509.UnknownAuthorityError
+	var hostnameErr x509.HostnameError
+	var certInvalid x509.CertificateInvalidError
+	if errors.As(err, &recordErr) {
+		return &Error{Code: CodeNetwork, Message: "对方不是 HTTPS 服务，请检查协议与端口"}
+	}
+	if errors.As(err, &unknownAuthority) || errors.As(err, &hostnameErr) || errors.As(err, &certInvalid) {
+		return &Error{Code: CodeNetwork, Message: "HTTPS 证书校验失败，请检查服务器证书"}
 	}
 	return &Error{Code: CodeNetwork, Message: "连不上服务器，请检查地址与网络"}
 }
 
 const propfindBody = `<?xml version="1.0" encoding="utf-8"?>` +
 	`<d:propfind xmlns:d="DAV:"><d:prop><d:getcontentlength/><d:getlastmodified/><d:getetag/></d:prop></d:propfind>`
+
+// cancelOnClose 把请求 context 的生命周期绑到响应 body 上：仅当调用方读完并关闭 body
+// 时才取消 context。旧实现用 defer cancel()，send 一返回就取消，调用方随后读 body 必然
+// 拿到 context canceled（列目录之后中断、被误报为「连不上服务器」）。
+type cancelOnClose struct {
+	io.ReadCloser
+	cancel context.CancelFunc
+}
+
+func (c *cancelOnClose) Close() error {
+	err := c.ReadCloser.Close()
+	c.cancel()
+	return err
+}
 
 func send(cfg Config, method, target string, deps Deps, body []byte, headers map[string]string) (*http.Response, error) {
 	client := deps.Client
@@ -250,7 +294,6 @@ func send(cfg Config, method, target string, deps Deps, body []byte, headers map
 		timeout = 20 * time.Second
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
 
 	var reader io.Reader
 	if body != nil {
@@ -258,7 +301,8 @@ func send(cfg Config, method, target string, deps Deps, body []byte, headers map
 	}
 	request, err := http.NewRequestWithContext(ctx, method, target, reader)
 	if err != nil {
-		return nil, &Error{Code: CodeNetwork, Message: "连不上服务器，请检查地址与网络"}
+		cancel()
+		return nil, &Error{Code: CodeInvalidURL, Message: "WebDAV 地址格式不正确"}
 	}
 	request.Header.Set("Authorization", BuildAuthHeader(cfg.Username, cfg.Password))
 	for name, value := range headers {
@@ -266,8 +310,10 @@ func send(cfg Config, method, target string, deps Deps, body []byte, headers map
 	}
 	response, err := client.Do(request)
 	if err != nil {
+		cancel()
 		return nil, mapFetchError(err)
 	}
+	response.Body = &cancelOnClose{ReadCloser: response.Body, cancel: cancel}
 	return response, nil
 }
 
@@ -347,7 +393,11 @@ func DownloadFile(cfg Config, fileName string, deps Deps) ([]byte, error) {
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		return nil, MapHTTPError(response.StatusCode)
 	}
-	return io.ReadAll(response.Body)
+	content, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, mapFetchError(err)
+	}
+	return content, nil
 }
 
 // DeleteFile 删除文件。
