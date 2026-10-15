@@ -81,10 +81,6 @@ func settingErrorResponse(err error) (Response, bool) {
 	return Response{}, false
 }
 
-func (s *Server) handleRelayMethodNotAllowed(_ *Context) (Response, error) {
-	return messageError(405, "method_not_allowed", "不支持的转发动词"), nil
-}
-
 func (s *Server) handleRelay(ctx *Context) (Response, error) {
 	if !relayMethods[ctx.Method] {
 		return messageError(405, "method_not_allowed", "不支持的转发动词"), nil

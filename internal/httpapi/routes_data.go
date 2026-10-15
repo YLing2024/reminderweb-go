@@ -234,9 +234,6 @@ func (s *Server) handleDeleteImage(ctx *Context) (Response, error) {
 }
 
 func (s *Server) handleGetImage(ctx *Context) (Response, error) {
-	if ctx.Method != "GET" {
-		return sendJSON(404, map[string]any{"error": "not_found"}), nil
-	}
 	name := ctx.Request.PathValue("name")
 	if !images.IsValidImageName(name) {
 		return messageError(400, "invalid_name", "图片文件名不合法"), nil

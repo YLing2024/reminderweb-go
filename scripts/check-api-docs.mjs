@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // 机检「源码路由 ↔ docs/API.md」一致性：改了路由不改文档 = 未完成。
 //
-// 约定：API 路由以 Go 1.22 的 `mux.HandleFunc("METHOD /path", ...)` 注册，
-//       docs/API.md 用 `### METHOD /path` 作为每个端点的标题。
-//   - 无方法前缀的兜底注册（如 `"/api/"`、`"/api/webdav"`）不是具体端点，文档里单独说明即可，
-//     本检查只比对“方法 + 路径”形式的注册，因此自动忽略它们。
-//   - 同一个路径注册多个动词时，每个「方法 路径」都要各自有文档标题。
+// 约定：API 路由在 internal/httpapi 里以 `{pattern: "METHOD /path", ...}` 的字面量登记
+//      （见 routes.go 的 routeTable），docs/API.md 用 `### METHOD /path` 作为每个端点的标题。
+//   - 无方法前缀的登记（如 `pattern: "/api/webdav"` 的转发兜底、`pattern: "/api/"`）不是具体端点，
+//     文档里单独说明即可，本检查只比对“方法 + 路径”形式的登记，因此自动忽略它们。
+//   - 同一个路径登记多个动词时，每个「方法 路径」都要各自有文档标题。
 //
 // 退出码：0 = 一致；1 = 有路由缺文档或文档多出路由。
 
@@ -15,14 +15,14 @@ import { dirname, join } from 'node:path'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-/** 从 internal/httpapi 下所有 .go 抽出注册的具体路由。 */
+/** 从 internal/httpapi 下所有 .go 抽出登记的具体路由。 */
 function collectCodeRoutes() {
   const dir = join(root, 'internal', 'httpapi')
   const routes = new Set()
   for (const name of readdirSync(dir)) {
     if (!name.endsWith('.go') || name.endsWith('_test.go')) continue
     const src = readFileSync(join(dir, name), 'utf8')
-    const re = /HandleFunc\(\s*"([A-Z]+)\s+(\S+)"\s*,/g
+    const re = /\{\s*pattern:\s*"([A-Z]+)\s+(\S+)"\s*,/g
     let m
     while ((m = re.exec(src)) !== null) {
       routes.add(`${m[1]} ${m[2]}`)

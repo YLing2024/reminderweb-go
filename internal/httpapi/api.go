@@ -91,7 +91,7 @@ type Server struct {
 	logger      *slog.Logger
 	now         func() int64
 	static      staticSource
-	mux         *http.ServeMux
+	routes      []parsedRoute
 }
 
 // Options 是装配参数。
@@ -116,12 +116,11 @@ func New(options Options) *Server {
 		logger:      options.Logger,
 		now:         options.Now,
 		static:      options.StaticFS,
-		mux:         http.NewServeMux(),
 	}
 	if server.static == nil {
 		server.static = &emptyStatic{}
 	}
-	server.routes()
+	server.routes = parseRoutes(server.routeTable())
 	return server
 }
 
@@ -158,7 +157,7 @@ func (s *Server) Handler() http.Handler {
 			}
 			return
 		}
-		s.mux.ServeHTTP(w, r)
+		s.dispatch(w, r)
 	})
 }
 
@@ -191,54 +190,186 @@ func (s *Server) applyCORS(w http.ResponseWriter, r *http.Request) bool {
 	return false
 }
 
-// wrap 把路由处理函数包成 http.HandlerFunc：读体 → 解析身份 → 调用 → 写响应。
-func (s *Server) wrap(kind bodyKind, limit int64, public bool, handler Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := &Context{
-			Method:      r.Method,
-			Path:        r.URL.Path,
-			Headers:     r.Header,
-			Config:      s.config,
-			DB:          s.db,
-			Now:         s.timestamp(),
-			RateLimiter: s.rateLimiter,
-			Sync:        s.sync,
-			Request:     r,
-			IP:          auth.ClientIP(r.Header, r.RemoteAddr, s.config.TrustProxy),
-		}
-		switch kind {
-		case bodyJSON:
-			body, err := readJSONBody(r, limit)
-			if err != nil {
-				writeError(w, err)
-				return
-			}
-			ctx.Body = body
-		case bodyRaw:
-			raw, err := readRawBody(r, limit)
-			if err != nil {
-				writeError(w, err)
-				return
-			}
-			ctx.RawBody = raw
-		}
+// apiRoute 描述一条 API 路由。pattern 既是匹配依据，也是
+// scripts/check-api-docs.mjs 与 docs/API.md 机检对照的字面量锚点：
+// 形如 "METHOD /path" 的条目各自需要一条文档标题；不带方法前缀的
+// （如转发兜底 "/api/webdav"）表示任意方法，机检自动忽略。
+type apiRoute struct {
+	pattern    string
+	prefixPath string
+	nameParam  string
+	public     bool
+	handler    Handler
+}
 
-		identity := auth.ResolveIdentity(r.Header, auth.AuthDeps{Mode: s.config.AuthMode, DB: s.db, Now: s.now})
-		if !public {
-			if identity == nil {
-				sendError(w, http.StatusUnauthorized, "unauthorized", nil, nil)
-				return
-			}
-		}
-		ctx.Identity = identity
+// parsedRoute 是 apiRoute 解析后的匹配形态：方法 + 精确路径 / 前缀。
+type parsedRoute struct {
+	method     string
+	path       string
+	prefixPath string
+	nameParam  string
+	public     bool
+	handler    Handler
+}
 
-		response, err := handler(ctx)
+func parseRoutes(table []apiRoute) []parsedRoute {
+	out := make([]parsedRoute, 0, len(table))
+	for _, rt := range table {
+		method, path := splitPattern(rt.pattern)
+		out = append(out, parsedRoute{
+			method:     method,
+			path:       path,
+			prefixPath: rt.prefixPath,
+			nameParam:  rt.nameParam,
+			public:     rt.public,
+			handler:    rt.handler,
+		})
+	}
+	return out
+}
+
+// splitPattern 把 "METHOD /path" 拆成方法与路径；无方法前缀时方法为空（任意方法）。
+func splitPattern(pattern string) (string, string) {
+	if idx := strings.IndexByte(pattern, ' '); idx >= 0 {
+		return pattern[:idx], pattern[idx+1:]
+	}
+	return "", pattern
+}
+
+// matchRoute 按注册顺序找第一条命中的路由；未命中返回 false。
+// 精确条目比对完整路径，前缀条目比对 prefixPath（旧 dispatch 的顺序语义）。
+func (s *Server) matchRoute(method, path string) (*parsedRoute, bool) {
+	for i := range s.routes {
+		route := &s.routes[i]
+		if route.method != "" && route.method != method {
+			continue
+		}
+		if route.prefixPath != "" {
+			if strings.HasPrefix(path, route.prefixPath) {
+				return route, true
+			}
+			continue
+		}
+		if path == route.path {
+			return route, true
+		}
+	}
+	return nil, false
+}
+
+// dispatch 是 /api/* 的总入口，逐条对齐旧 http.ts 的 handleRequest + dispatch：
+// 先按「方法 + 路径」读体（含体积上限），再解析身份（仅 PUBLIC_ROUTES 免认证），
+// 最后精确分发；未命中一律 404。绝不依赖 ServeMux 的方法推断（其 GET 模式会误配 HEAD）。
+func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
+	// 用转义后的原始路径做匹配与取名，贴近旧实现直接读取 req.url 的行为：
+	// 已编码的路径不会被解码后误命中（如 /api/%64ata 在旧实现同样不命中）。
+	rawPath := r.URL.EscapedPath()
+	ctx := &Context{
+		Method:      r.Method,
+		Path:        rawPath,
+		Headers:     r.Header,
+		Config:      s.config,
+		DB:          s.db,
+		Now:         s.timestamp(),
+		RateLimiter: s.rateLimiter,
+		Sync:        s.sync,
+		Request:     r,
+		IP:          auth.ClientIP(r.Header, r.RemoteAddr, s.config.TrustProxy),
+	}
+
+	// 读体（含 413 / 400 兜底）发生在身份校验之前，与旧实现一致。
+	switch kind, limit := bodyPlan(r.Method, rawPath); kind {
+	case bodyJSON:
+		body, err := readJSONBody(r, limit)
 		if err != nil {
 			writeError(w, err)
 			return
 		}
-		writeResponse(w, response)
+		ctx.Body = body
+	case bodyRaw:
+		raw, err := readRawBody(r, limit)
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		ctx.RawBody = raw
 	}
+
+	route, matched := s.matchRoute(r.Method, rawPath)
+	// 公开路由固定不解析身份（与旧实现 PUBLIC_ROUTES 相同）；其余（含未命中）先鉴权。
+	if matched && route.public {
+		ctx.Identity = nil
+	} else {
+		identity := auth.ResolveIdentity(r.Header, auth.AuthDeps{Mode: s.config.AuthMode, DB: s.db, Now: s.now})
+		if identity == nil {
+			sendError(w, http.StatusUnauthorized, "unauthorized", nil, nil)
+			return
+		}
+		ctx.Identity = identity
+	}
+
+	if !matched {
+		writeResponse(w, Response{Status: http.StatusNotFound, Body: map[string]any{"error": "not_found"}})
+		return
+	}
+	if route.nameParam != "" {
+		r.SetPathValue(route.nameParam, routeName(route, rawPath))
+	}
+	response, err := route.handler(ctx)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeResponse(w, response)
+}
+
+// routeName 取前缀路由的路径参数（旧实现用 decodeURIComponent 解一次）；解码失败返回空串，
+// 由处理器按「非法名称」处理。
+func routeName(route *parsedRoute, rawPath string) string {
+	value := rawPath[len(route.prefixPath):]
+	decoded, err := url.PathUnescape(value)
+	if err != nil {
+		return ""
+	}
+	return decoded
+}
+
+// bodyPlan 按「方法 + 路径」决定请求体形态与上限，对齐旧 bodyLimitFor / isBinaryBodyRoute。
+func bodyPlan(method, path string) (bodyKind, int64) {
+	switch {
+	case isBinaryBodyRoute(method, path):
+		return bodyRaw, bodyLimitFor(method, path)
+	case method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch:
+		return bodyJSON, bodyLimitFor(method, path)
+	default:
+		return bodyNone, 0
+	}
+}
+
+// isRelayPath 判断是否为 WebDAV 转发子路径；`/api/webdav/config` 是普通 JSON 设置接口，不算转发。
+func isRelayPath(path string) bool {
+	if path == "/api/webdav/config" {
+		return false
+	}
+	return strings.HasPrefix(path, "/api/webdav/")
+}
+
+// bodyLimitFor 按路由选择请求体上限：整库替换与转发更宽松；其余保持 2 MiB。
+func bodyLimitFor(method, path string) int64 {
+	if method == http.MethodPut && path == "/api/data/replace" {
+		return MaxReplaceBodyBytes
+	}
+	if path == "/api/webdav" || isRelayPath(path) {
+		return MaxRelayBodyBytes
+	}
+	return MaxBodyBytes
+}
+
+func isBinaryBodyRoute(method, path string) bool {
+	if path == "/api/webdav" || isRelayPath(path) {
+		return true
+	}
+	return strings.HasPrefix(path, "/api/images/") && (method == http.MethodPut || method == http.MethodPost)
 }
 
 func writeError(w http.ResponseWriter, err error) {
@@ -337,15 +468,6 @@ func readRawBody(r *http.Request, limit int64) ([]byte, error) {
 		return nil, &HttpError{Status: http.StatusRequestEntityTooLarge, Code: "payload_too_large"}
 	}
 	return data, nil
-}
-
-// decodePathComponent 解码 URL 路径分量；失败返回 false。
-func decodePathComponent(raw string) (string, bool) {
-	decoded, err := url.PathUnescape(raw)
-	if err != nil {
-		return "", false
-	}
-	return decoded, true
 }
 
 // asHTTPError 判断错误是否为 *HttpError。
