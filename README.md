@@ -96,10 +96,12 @@ DATA_DIR=/var/lib/reminderweb-go PORT=19240 AUTH_MODE=builtin ./reminderweb-go
 把 `DATA_DIR` 指向旧服务的既有数据目录，新实现会直接打开既有的 `reminder.db`，schema 与 PRAGMA 不变。
 WebDAV 连接一开始沿用 `WEBDAV_*` 环境变量，之后以页面上设置（存在库里）的值为准。
 
-## 与旧实现的有意差异
+## 与旧实现的行为对齐
 
-见 [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md)；当前已知差异集中在少数边界行为（如端口默认值由旧版的 18940 改为 19240、
-未支持方法在 `/api/webdav/config` 上返回 405 等），不影响前端契约与数据兼容。
+路由层已与旧 Node 实现**逐请求对齐**（未注册路由 / 未支持动词一律 `404 not_found`、`HEAD` 不误配 `GET`、
+鉴权次序与读体次序一致）：默认端口 `18940`、完整对照矩阵与复现脚本见
+[`docs/ROUTE-PARITY.md`](docs/ROUTE-PARITY.md)。其余有意差异（备份包不含墓碑等）见
+[`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md)。
 
 ## 许可
 

@@ -1,13 +1,15 @@
 # ReminderWeb 后端 API（权威契约）
 
 本文件是 reminderweb-go 后端 HTTP 接口的权威契约。**改了路由不改本文件 = 未完成**：
-`scripts/check-api-docs.mjs` 会机检「源码 `mux.HandleFunc("METHOD /path", ...)` ↔ 本文 `### METHOD /path` 标题」一致，
-并随 `make check` 一起跑。
+路由在 `internal/httpapi/routes.go` 的 `routeTable` 里以 `{pattern: "METHOD /path", ...}` 字面量登记，
+`scripts/check-api-docs.mjs` 会机检「源码登记 ↔ 本文 `### METHOD /path` 标题」一致，并随 `make check` 一起跑。
 
 - 统一前缀：`/api`。
 - 请求 / 响应体一律 UTF-8 JSON（图片上传与 WebDAV 中继为原始字节）。
-- 生产只监听 `127.0.0.1:19240`，对外由 nginx 反代。示例统一用 `127.0.0.1` / `example.com`。
-- 同一路径用不同方法注册；路径参数用 Go 1.22 的 `{name}` / `{path...}` 通配。
+- 默认监听 `127.0.0.1:18940`（与旧 Node 实现一致；显式设置 `PORT` 时以环境变量为准，生产部署用 `PORT=19240`），
+  对外由 nginx 反代。示例统一用 `127.0.0.1` / `example.com`。
+- 路由按「方法 + 路径」精确匹配（对齐旧实现 `dispatch`），未命中一律 `404 {"error":"not_found"}`；
+  文档里的 `{name}` / `{path...}` 只是路径参数占位，匹配语义见 §5。
 
 ## 1. 认证模式
 
@@ -25,7 +27,7 @@
 - 跨站部署（前后端分离）时用 `ALLOWED_ORIGINS` + `COOKIE_SAME_SITE=none`。
 - 登录失败限流：每 IP 10 分钟窗口内失败次数超过 `LOGIN_RATE_LIMIT`（默认 5）后返回 `429`；
   失败固定延迟 150 ms 以抵御时间侧信道。
-- **公开端点**（无需身份）：`GET /api/health`、`GET /api/version`、`POST /api/auth/login`。其余端点未认证一律 `401 unauthorized`。
+- **公开端点**（无需身份）：`GET /api/health`、`POST /api/auth/login`。其余端点（含 `GET /api/version`）未认证一律 `401 unauthorized`。
 
 ## 2. 数据模型约定
 
@@ -136,7 +138,7 @@ curl -s http://127.0.0.1:19240/api/health
 
 ### GET /api/version
 
-公开。返回服务标识与 schema 版本。副作用：无。
+需认证。返回服务标识与 schema 版本。副作用：无。
 
 ```bash
 curl -s http://127.0.0.1:19240/api/version
@@ -504,10 +506,25 @@ curl -s -X DELETE http://127.0.0.1:19240/api/sync/files/reminder-backup-20260101
 
 ---
 
-## 5. 未命中与其它约定
+## 5. 未命中、动词与其它约定
 
-- `/api/` 下未注册的路径一律 `404 {"error":"not_found"}`。
-- `/api/webdav` 与 `/api/webdav/{path...}` 上不被支持的动词（含无方法兜底）返回 `405 method_not_allowed`；
-  `HEAD` 由 `GET` 自动匹配。
+以下规则逐条对齐旧 Node 实现（`server/src/http.ts` 的 `handleRequest` + `dispatch`），
+完整逐路由对照见 [`ROUTE-PARITY.md`](ROUTE-PARITY.md)。
+
+处理次序（对每个 `/api/*` 请求）：预检 → 读体 → 鉴权 → 分发。
+
+- `OPTIONS /api/*` 一律 `204`（不受认证影响）。
+- **读体先于鉴权**：`POST`/`PUT`/`PATCH` 会先解析 JSON，体超限 `413 payload_too_large`、解析失败
+  `400 invalid_json`（未认证也一样）；`/api/webdav` 与 `/api/webdav/*` 读原始体（上限 64 MiB），不解析 JSON；
+  `/api/images/` 上的 `PUT`/`POST` 读原始体（上限 2 MiB）。
+- **只有 `GET /api/health` 与 `POST /api/auth/login` 免认证**；其余（含未注册路径）未认证一律 `401 unauthorized`。
+- **精确匹配**：只按「方法 + 路径」字面量命中，未命中一律 `404 {"error":"not_found"}`。
+  - `HEAD` 不匹配任何 `GET` 路由（`HEAD /api/health` 等一律 `404`）；仅 WebDAV 转发放行 `HEAD`。
+  - 路径尾斜杠、多段、已编码字符（如 `/api/%64ata`）都不命中。
+  - `GET/PUT /api/webdav/config` 之外的动词（`POST`/`PATCH`/…）落到转发路径：未支持动词 `405 method_not_allowed`，
+    `DELETE`/`PROPFIND`/`MKCOL`/`HEAD` 等受支持动词因缺 `X-Dav-Url` 返回 `400 missing_target`。
+- **`/api/images/`** 只认 `PUT` / `GET` / `DELETE`，其余动词 `404`；`/api/images/`（空名）或多段名 `400 invalid_name`。
+- **`/api/webdav` 与 `/api/webdav/{path...}`** 的不支持动词返回 `405 method_not_allowed`；`HEAD` 属支持动词。
+- **`DELETE /api/sync/files/{name}`** 的非法文件名返回 `400 invalid_name`（先判名，再判执行中）。
 - 非 `/api/` 路径交给静态托管：`SERVE_STATIC=1`（默认）时返回前端产物，`SERVE_STATIC=0` 时返回 `404`；
   `STATIC_ONLY=1` 时只托管前端、`/api/*` 一律 `404`。

@@ -147,16 +147,19 @@ GET /api/webdav/config           → 只含 webdavPasswordSet:true，无口令�
 冷启动到 /api/health 200：68 ms（阈值 300 ms）
 ```
 
-## 与旧实现有意不同的行为
+## 与旧实现的行为对齐
 
-1. 默认端口：旧 `18940` → 新 `19240`。
-2. `HEAD /api/webdav/config`：落到配置读处理器（旧实现对未列方法另有处理），返回配置视图。
-3. `/api/webdav/config` 上不被支持的动词统一返回 `405 method_not_allowed`。
-4. `AUTH_MODE=sso` 下 `POST /api/auth/login` 返回 `400 login_not_available`（与旧实现一致）；
+路由层已与旧实现**逐请求对齐**（只按「方法 + 路径」精确匹配；未注册路由 / 未支持动词一律
+`404 not_found`；`HEAD` 不误配 `GET`；鉴权与读体次序一致；默认端口 `18940`）。完整对照矩阵、
+复现脚本与已修复差异见 [`ROUTE-PARITY.md`](ROUTE-PARITY.md)。
+
+仍属有意的非路由差异：
+
+1. `AUTH_MODE=sso` 下 `POST /api/auth/login` 返回 `400 login_not_available`（与旧实现一致）；
    需求书 §7 文字写的是「404」，此处以旧实现为功能权威。
-5. 备份 metadata 不含墓碑（备份格式与安卓端共用，无墓碑字段），同步合并恒以空墓碑参与——
+2. 备份 metadata 不含墓碑（备份格式与安卓端共用，无墓碑字段），同步合并恒以空墓碑参与——
    与旧实现完全一致；因此跨设备的「删除」不通过备份包传播，需依赖后续任一端的整库迁移。
-6. 构建默认 `CGO_ENABLED=0`，产物为静态二进制（与 Dockerfile 一致）。
+3. 构建默认 `CGO_ENABLED=0`，产物为静态二进制（与 Dockerfile 一致）。
 
 ## 已知限制
 
