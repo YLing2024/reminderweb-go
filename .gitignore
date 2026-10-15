@@ -2,6 +2,8 @@
 /reminderweb-go
 /bin/
 /tools/fakedav/fakedav
+# 逐路由取证用的临时二进制（旧/新实现对比），绝不入库
+/.parity-bin
 
 # 前端产物（由 npm run build 生成，再经 go:embed 打进二进制）
 /web/dist/
