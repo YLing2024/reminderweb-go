@@ -14,7 +14,7 @@ $(WEB_DIST):
 web: $(WEB_DIST)
 
 build: web
-	go build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/reminderweb-go
+	CGO_ENABLED=0 go build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/reminderweb-go
 
 test: web
 	go test ./... -count=1
