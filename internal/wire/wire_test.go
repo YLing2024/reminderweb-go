@@ -40,7 +40,7 @@ func TestParseClientDataCountsRejected(t *testing.T) {
 			map[string]any{"id": 3, "title": "missing updatedAt"},
 			"not-an-object",
 		},
-		"tags": []any{map[string]any{"id": 2, "name": "t", "color": "#fff", "updatedAt": 5}},
+		"tags":     []any{map[string]any{"id": 2, "name": "t", "color": "#fff", "updatedAt": 5}},
 		"settings": map[string]any{"value": map[string]any{"viewMode": "CARD"}, "updatedAt": 7},
 		"tombstones": []any{
 			map[string]any{"id": 9, "updatedAt": 20},

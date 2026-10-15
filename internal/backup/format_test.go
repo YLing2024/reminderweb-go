@@ -47,12 +47,12 @@ func TestBuildBackupMetadataNeverLeaksWebdavCredentials(t *testing.T) {
 		Reminders: []wire.Item{{"id": int64(1), "title": "x", "updatedAt": int64(123)}},
 		Settings: wire.SettingsEnvelope{
 			Value: map[string]any{
-				"viewMode":        "CARD",
-				"webDavServer":    "https://dav.example.com/dav/",
-				"webDavUsername":  "user",
-				"webDavPassword":  "example-secret",
-				"webDavPath":      "/dav/",
-				"themeOption":     "DARK",
+				"viewMode":       "CARD",
+				"webDavServer":   "https://dav.example.com/dav/",
+				"webDavUsername": "user",
+				"webDavPassword": "example-secret",
+				"webDavPath":     "/dav/",
+				"themeOption":    "DARK",
 			},
 			UpdatedAt: 123,
 		},

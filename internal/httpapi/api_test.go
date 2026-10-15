@@ -200,8 +200,8 @@ func TestBodyTooLarge(t *testing.T) {
 
 func TestStaticServingAndFallback(t *testing.T) {
 	static := fstest.MapFS{
-		"index.html":       &fstest.MapFile{Data: []byte("<html>app</html>")},
-		"assets/index.js":  &fstest.MapFile{Data: []byte("console.log(1)")},
+		"index.html":      &fstest.MapFile{Data: []byte("<html>app</html>")},
+		"assets/index.js": &fstest.MapFile{Data: []byte("console.log(1)")},
 	}
 	server, _ := testServer(t, map[string]string{"AUTH_MODE": "none"}, static)
 	handler := server.Handler()

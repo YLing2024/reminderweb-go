@@ -27,15 +27,15 @@ func TestLoadDefaults(t *testing.T) {
 
 func TestLoadRejectsInvalidValues(t *testing.T) {
 	cases := map[string]map[string]string{
-		"端口越界":       {"PORT": "70000"},
-		"端口非数字":      {"PORT": "abc"},
-		"认证模式非法":     {"AUTH_MODE": "ldap"},
-		"日志级别非法":     {"LOG_LEVEL": "verbose"},
+		"端口越界":          {"PORT": "70000"},
+		"端口非数字":         {"PORT": "abc"},
+		"认证模式非法":        {"AUTH_MODE": "ldap"},
+		"日志级别非法":        {"LOG_LEVEL": "verbose"},
 		"启用 WebDAV 无地址": {"WEBDAV_ENABLED": "1"},
-		"同步间隔越界":     {"WEBDAV_INTERVAL_MINUTES": "0"},
-		"允许来源通配":     {"ALLOWED_ORIGINS": "*"},
-		"允许来源带路径":    {"ALLOWED_ORIGINS": "https://app.example.com/path"},
-		"SameSite 非法": {"COOKIE_SAMESITE": "strict"},
+		"同步间隔越界":        {"WEBDAV_INTERVAL_MINUTES": "0"},
+		"允许来源通配":        {"ALLOWED_ORIGINS": "*"},
+		"允许来源带路径":       {"ALLOWED_ORIGINS": "https://app.example.com/path"},
+		"SameSite 非法":   {"COOKIE_SAMESITE": "strict"},
 	}
 	for name, env := range cases {
 		if _, err := loadEnv(env); err == nil {

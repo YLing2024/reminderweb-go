@@ -58,11 +58,11 @@ func TestReadServerSettingsFallsBackToEnvThenPersists(t *testing.T) {
 
 func TestParseWebdavConfigPatchValidation(t *testing.T) {
 	bad := []any{
-		map[string]any{},                                            // 空补丁
-		map[string]any{"webdavIntervalMinutes": 0},                  // 越界
-		map[string]any{"webdavIntervalMinutes": 1441},               // 越界
-		map[string]any{"webdavKeep": 1001},                          // 越界
-		map[string]any{"relayAllowPrivate": "yes"},                  // 类型错
+		map[string]any{}, // 空补丁
+		map[string]any{"webdavIntervalMinutes": 0},    // 越界
+		map[string]any{"webdavIntervalMinutes": 1441}, // 越界
+		map[string]any{"webdavKeep": 1001},            // 越界
+		map[string]any{"relayAllowPrivate": "yes"},    // 类型错
 	}
 	for _, raw := range bad {
 		if _, err := ParseWebdavConfigPatch(raw); err == nil {
