@@ -1,0 +1,24 @@
+[Unit]
+Description=reminderweb-go（纪念日提醒 Web 端 + WebDAV 同步后端）
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 以最小权限的非 root 用户运行；用户与目录按部署实际调整。
+User=reminderweb
+Group=reminderweb
+WorkingDirectory=/var/lib/reminderweb-go
+EnvironmentFile=-/etc/reminderweb-go/reminderweb.env
+ExecStart=/usr/local/bin/reminderweb-go
+Restart=always
+RestartSec=2
+# 只监听回环，对外由 nginx 反代。
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/reminderweb-go
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

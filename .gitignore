@@ -1,0 +1,24 @@
+# 构建产物
+/reminderweb-go
+/bin/
+/tools/fakedav/fakedav
+
+# 前端产物（由 npm run build 生成，再经 go:embed 打进二进制）
+/web/dist/
+/web/node_modules/
+/web/.vite/
+
+# 运行时数据与配置（含凭据，绝不入库）
+/data/
+/config.yml
+/config.local.yml
+*.key
+*.log
+
+# 环境变量
+.env
+.env.local
+
+# 编辑器 / 系统
+.DS_Store
+*.swp
