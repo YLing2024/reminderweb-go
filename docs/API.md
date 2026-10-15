@@ -528,3 +528,6 @@ curl -s -X DELETE http://127.0.0.1:19240/api/sync/files/reminder-backup-20260101
 - **`DELETE /api/sync/files/{name}`** 的非法文件名返回 `400 invalid_name`（先判名，再判执行中）。
 - 非 `/api/` 路径交给静态托管：`SERVE_STATIC=1`（默认）时返回前端产物，`SERVE_STATIC=0` 时返回 `404`；
   `STATIC_ONLY=1` 时只托管前端、`/api/*` 一律 `404`。
+  - 静态响应缓存（对齐旧实现 `serveStatic`）：直接命中的产物（含显式请求 `GET /index.html`）为
+    `Cache-Control: public, max-age=3600`；SPA 回退（未知无扩展名路径回落到 `index.html`）与目录根 `/`
+    为 `no-cache`。两者都带 `X-Content-Type-Options: nosniff`。

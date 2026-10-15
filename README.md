@@ -99,9 +99,10 @@ WebDAV 连接一开始沿用 `WEBDAV_*` 环境变量，之后以页面上设置�
 ## 与旧实现的行为对齐
 
 路由层已与旧 Node 实现**逐请求对齐**（未注册路由 / 未支持动词一律 `404 not_found`、`HEAD` 不误配 `GET`、
-鉴权次序与读体次序一致）：默认端口 `18940`、完整对照矩阵与复现脚本见
-[`docs/ROUTE-PARITY.md`](docs/ROUTE-PARITY.md)。其余有意差异（备份包不含墓碑等）见
-[`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md)。
+鉴权次序与读体次序一致）；静态托管缓存头亦已对齐（直接命中的 `GET /index.html` 为
+`public, max-age=3600`，仅 SPA 回退与目录根为 `no-cache`）。默认端口 `18940`、完整对照矩阵与复现脚本见
+[`docs/ROUTE-PARITY.md`](docs/ROUTE-PARITY.md)。运行时行为无有意差异，仅构建方式不同
+（`CGO_ENABLED=0` 静态二进制）；逐条复核记录见 [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md)。
 
 ## 许可
 

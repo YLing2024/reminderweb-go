@@ -101,5 +101,19 @@ node tools/route-parity.mjs --old http://127.0.0.1:19555 --new http://127.0.0.1:
 矩阵之外的抽样（`/api/images/x/y`、`/api/webdav/config/`、`/api/data//full`、
 已编码路径 `/api/%64ata`、`/api/data%2Ffull` 等）也逐条一致。
 
-其它层面（非路由，见 `ACCEPTANCE.md`）：备份包不含墓碑、`CGO_ENABLED=0` 静态构建等，
-均与旧实现行为一致或属于构建方式差异，不影响逐请求的状态码。
+静态托管缓存头：**已对齐（已消除）**。旧 `http.ts` 的 `serveStatic`（第 259 行）只按
+`segments.length === 0` 区分缓存，未给 `index.html` 设特例：直接命中的静态文件（含显式请求的
+`GET /index.html`）为 `public, max-age=3600`，只有 SPA 回退到 `index.html`（第 275 行）与目录根
+`/` 为 `no-cache`。新实现原有一条 `name == "index.html" → no-cache` 的特例，现已删除。
+
+| 请求 | 旧实测 | 新（修复前） | 新（修复后） |
+|---|---|---|---|
+| `GET /index.html` | `public, max-age=3600` | `no-cache` | `public, max-age=3600` |
+| `GET /`（SPA 回退） | `no-cache` | `no-cache` | `no-cache` |
+| `GET /sw.js`、`/assets/*` 等 | `public, max-age=3600` | `public, max-age=3600` | `public, max-age=3600` |
+
+回归见 `internal/httpapi/api_test.go` 的 `TestIndexHTMLCacheControl` 与 `TestStaticServingAndFallback`。
+
+其它层面：`CGO_ENABLED=0` 静态构建属打包方式差异，不改变 HTTP 响应；备份包不含墓碑、sso 登录
+返回 `400 login_not_available` 等经复核均为旧实现本身的行为（非新旧差异），已从「差异」清单更正。
+详见 [`ACCEPTANCE.md`](ACCEPTANCE.md)。

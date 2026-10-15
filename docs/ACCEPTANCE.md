@@ -153,13 +153,35 @@ GET /api/webdav/config           → 只含 webdavPasswordSet:true，无口令�
 `404 not_found`；`HEAD` 不误配 `GET`；鉴权与读体次序一致；默认端口 `18940`）。完整对照矩阵、
 复现脚本与已修复差异见 [`ROUTE-PARITY.md`](ROUTE-PARITY.md)。
 
-仍属有意的非路由差异：
+静态托管的缓存头也已对齐。旧实现**没有「HTML 特例」**：`server/src/http.ts` 的 `serveStatic`
+只按 `segments.length === 0` 区分——直接命中的静态文件（含显式请求的 `/index.html`）一律
+`public, max-age=3600`，只有 SPA 回退到 `index.html`（`http.ts` 第 275 行）与目录根 `/` 才是
+`no-cache`。新实现原先把 `index.html` 当作特例单独设 `no-cache`，与本轮对齐后已删除该特例。
 
-1. `AUTH_MODE=sso` 下 `POST /api/auth/login` 返回 `400 login_not_available`（与旧实现一致）；
-   需求书 §7 文字写的是「404」，此处以旧实现为功能权威。
-2. 备份 metadata 不含墓碑（备份格式与安卓端共用，无墓碑字段），同步合并恒以空墓碑参与——
-   与旧实现完全一致；因此跨设备的「删除」不通过备份包传播，需依赖后续任一端的整库迁移。
-3. 构建默认 `CGO_ENABLED=0`，产物为静态二进制（与 Dockerfile 一致）。
+### 已消除的差异（现已与旧实现一致）
+
+| # | 请求 / 项 | 修复前（新） | 修复后（新） | 旧实现实测 |
+|---|---|---|---|---|
+| 1 | `GET /index.html` 的 `Cache-Control` | `no-cache` | `public, max-age=3600` | `public, max-age=3600` |
+| 2 | 未设置 `PORT` 时的默认端口 | `19240` | `18940` | `18940` |
+
+（第 2 项此前记录在 [`ROUTE-PARITY.md`](ROUTE-PARITY.md) §4，此处一并归档。）
+
+### 复核后不属实的「差异」（旧实现本身就是该行为，非新旧差异）
+
+1. `AUTH_MODE=sso` 下 `POST /api/auth/login` 返回 `400 login_not_available`：旧、新实测一致；
+   与需求书 §7 文字写的「404」不同，属**需求书文字与旧实现不符**，以旧实现为功能权威，
+   并非新旧实现之间的差异。
+2. 备份 `metadata.json` 不含墓碑、跨设备「删除」不经备份包传播：备份格式与安卓端共用、字段本身
+   没有墓碑，旧实现完全相同——属**格式的固有约束（两端共有）**，不是新旧差异。
+
+### 仍存在的差异（仅构建 / 部署方式，非运行时行为）
+
+1. 构建默认 `CGO_ENABLED=0`，产物为静态二进制（与 Dockerfile 一致）；旧实现是 Node 脚本。
+   这属打包方式差异，不改变任何 HTTP 响应。
+
+默认端口已对齐为 `18940`：未设置 `PORT` 时监听 `127.0.0.1:18940`（旧实现 `server/src/config.ts`
+同为 `18940`），`deploy/` 下的 systemd 与 nginx 示例端口需按实际部署覆盖。
 
 ## 已知限制
 
