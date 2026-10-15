@@ -26,7 +26,7 @@
 
 新、旧两个临时实例同时启动，对同一 `(方法, 路径)` 矩阵发请求，比对状态码与错误码：
 
-- 新版：`go build` 出的临时二进制，`PORT=19252`，`DATA_DIR` 临时目录。
+- 新版：`go build` 出的临时二进制，`PORT=19252`，指向一次性临时 MySQL 库（`DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`）。
 - 旧版：`/root/.nvm/versions/node/v24.19.0/bin/node server/src/index.ts`，`PORT=19251`，`DATA_DIR` 临时目录。
 - 两边均 `AUTH_MODE=sso`、`AUTH_USER=linden`，请求带 `X-Auth-User: linden`。
 - 全程只监听回环，未触碰 `18940` / `19240`，未动 systemd 与 nginx；取证结束即停两个临时实例。

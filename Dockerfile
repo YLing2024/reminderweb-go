@@ -20,6 +20,7 @@ RUN useradd --system --create-home --home-dir /var/lib/reminderweb-go reminderwe
 USER reminderweb
 WORKDIR /var/lib/reminderweb-go
 COPY --from=build /out/reminderweb-go /usr/local/bin/reminderweb-go
-ENV HOST=127.0.0.1 PORT=19240 DATA_DIR=/var/lib/reminderweb-go
+ENV HOST=127.0.0.1 PORT=19240 DB_NAME=reminderweb DB_USER=reminderweb
+# 存储一律 MySQL：运行时用 DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD（或 DB_DSN）注入目标库。
 EXPOSE 19240
 ENTRYPOINT ["/usr/local/bin/reminderweb-go"]

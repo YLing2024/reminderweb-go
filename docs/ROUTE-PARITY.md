@@ -13,8 +13,9 @@
 ```bash
 # 旧实现（只读参考；一次性 DATA_DIR 与空闲端口）
 cd /root/proj/ReminderWeb && PORT=19555 AUTH_MODE=none SERVE_STATIC=0 DATA_DIR=/tmp/olddata node server/src/index.ts
-# 新实现
-cd /root/proj/reminderweb-go && PORT=19557 AUTH_MODE=none SERVE_STATIC=0 DATA_DIR=/tmp/newdata ./reminderweb-go
+# 新实现（一次性 MySQL：起一个临时容器，或指向手边的空库）
+cd /root/proj/reminderweb-go && PORT=19557 AUTH_MODE=none SERVE_STATIC=0 \
+  DB_HOST=127.0.0.1 DB_PORT=3306 DB_NAME=rwparity DB_USER=root DB_PASSWORD=… ./reminderweb-go
 # 对照
 node tools/route-parity.mjs --old http://127.0.0.1:19555 --new http://127.0.0.1:19557
 # → 核对 234 个请求，差异 0 个

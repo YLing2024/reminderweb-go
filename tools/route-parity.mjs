@@ -5,7 +5,7 @@
 //   node tools/route-parity.mjs --old http://127.0.0.1:19555 --new http://127.0.0.1:19557
 //   node tools/route-parity.mjs --old ... --new ... --cookie 'rwsession=...'
 //
-// 只读探测；不改任何数据（GET/PUT 会写库，建议两边都用一次性 DATA_DIR）。
+// 只读探测；不改任何数据（GET/PUT 会写库，旧实现建议用一次性 DATA_DIR，新实现建议指向一次性 MySQL 库）。
 // 退出码：0 = 完全一致；1 = 存在差异。
 
 const args = new Map()
