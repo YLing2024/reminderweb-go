@@ -391,3 +391,26 @@
   font-size: 13px;
   color: var(--md-sys-color-error);
 }
+
+/*
+ * 窄屏 / 触屏：自定义种子色是覆盖在 44×44 圆点上的 input[type=color]，
+ * 部分浏览器不按其 inset 撑满，实测只有 27px。这里显式给足 44×44 命中区，
+ * 并把字号抬到 16（避免 iOS 聚焦缩放）；鼠标 + ≥992px 的桌面不命中，观感不变。
+ */
+@media (max-width: 991.98px), (pointer: coarse) {
+  .seedColorInput {
+    width: 100%;
+    height: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /*
+   * 提示条里的备份文件名（如 reminder-backup-….zip）是无空格长串，
+   * 作为 flex 子项时最小内容宽度会把 390px 的行撑出横向溢出；允许在任意字符处换行。
+   */
+  .notice > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
