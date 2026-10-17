@@ -75,3 +75,10 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* 触屏：内置登录主按钮命中区抬到 44 高，鼠标环境保持原高度。 */
+@media (pointer: coarse) {
+  .submit {
+    min-height: 44px;
+  }
+}

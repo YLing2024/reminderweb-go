@@ -221,3 +221,17 @@
     gap: 18px;
   }
 }
+
+/* 窄屏：字标与顶栏操作按钮组允许换行，极窄机型不再横向溢出；
+   ≥600px 的分段控件与 FAB 布局不受影响。 */
+@media (max-width: 599px) {
+  .topBar {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .topActions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

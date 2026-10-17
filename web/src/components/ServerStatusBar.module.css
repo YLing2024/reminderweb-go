@@ -45,3 +45,10 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* 触屏：状态栏操作按钮命中区抬到 32 高，鼠标环境不变。 */
+@media (pointer: coarse) {
+  .action {
+    min-height: 32px;
+  }
+}

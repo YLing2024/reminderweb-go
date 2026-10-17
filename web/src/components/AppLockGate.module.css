@@ -80,3 +80,10 @@
   font-size: 13px;
   cursor: pointer;
 }
+
+/* 触屏：忘记密码按钮命中区抬到 32 高，鼠标环境不变。 */
+@media (pointer: coarse) {
+  .forgot {
+    min-height: 32px;
+  }
+}
