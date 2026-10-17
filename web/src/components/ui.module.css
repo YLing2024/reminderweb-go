@@ -192,3 +192,35 @@
 .textButtonDanger {
   color: var(--md-sys-color-error);
 }
+
+/*
+ * 窄屏 / 触屏：开关本体可见轨道仍是 52×32，按钮命中区在垂直方向扩到 44
+ * （按钮底色转透明，改由 ::before 画轨道、拇指随之下移），降低误触。
+ * 鼠标 + ≥992px 的桌面不命中，尺寸与观感逐像素不变。
+ */
+@media (max-width: 991.98px), (pointer: coarse) {
+  .toggle {
+    height: 44px;
+    background: transparent;
+  }
+
+  .toggle::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    height: 32px;
+    border-radius: 16px;
+    background: var(--md-sys-color-surface-variant);
+    transition: background 0.18s ease;
+  }
+
+  .toggleOn::before {
+    background: var(--md-sys-color-primary);
+  }
+
+  .toggleThumb {
+    top: 10px;
+  }
+}
