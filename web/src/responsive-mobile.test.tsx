@@ -336,3 +336,100 @@ describe('移动端响应式：桌面观感不变（新规则只在窄屏 / 触�
     }
   });
 });
+
+/**
+ * 第二轮补刀：设置页实测缺口（需求书 §4）。
+ *
+ * 口径与上一块一致——jsdom 量不到真实尺寸，改为对源码样式表断言：
+ * 命中区必须声明在 `@media (max-width: 991.98px), (pointer: coarse)` 内；
+ * 媒体查询外不得出现改动，保证 1280×900 桌面观感逐像素一致。
+ */
+// 注意：解析器把 `@media` 前缀去掉后再作为 media 值保存，故此处不含 `@media`。
+const SETTINGS_NARROW_OR_COARSE = '(max-width: 991.98px), (pointer: coarse)';
+
+/** 该规则是否落在 §4 指定的那条「窄屏或触屏」媒体查询里。 */
+function inSettingsNarrowOrCoarse(media: string | null): boolean {
+  return media === SETTINGS_NARROW_OR_COARSE;
+}
+
+/** 某类名在指定媒体查询内的命中区高度（取 height / min-height 的最大声明）。 */
+function coarseBoxHeightPx(rules: CssRule[], className: string): number {
+  let max = 0;
+  for (const rule of rules) {
+    if (!inSettingsNarrowOrCoarse(rule.media)) continue;
+    if (!selectorMatches(rule.selector, className)) continue;
+    for (const property of ['height', 'min-height']) {
+      for (const value of declareValues(rule.body, property)) if (value.px !== null) max = Math.max(max, value.px);
+    }
+  }
+  return max;
+}
+
+describe('移动端响应式（第二轮）：设置页遗留缺口', () => {
+  it('种子色输入框在窄屏/触屏下命中区 ≥44px（实测 27px）', () => {
+    expect(coarseBoxHeightPx(rulesOf('pages/SettingsPage.module.css'), 'seedColorInput')).toBeGreaterThanOrEqual(44);
+  });
+
+  it('行内「恢复 / 删除」按钮在窄屏/触屏下命中区 ≥44px（实测 36px）', () => {
+    const rules = rulesOf('components/WebDavSettings.module.css');
+    expect(coarseBoxHeightPx(rules, 'linkButton')).toBeGreaterThanOrEqual(44);
+    expect(coarseBoxHeightPx(rules, 'linkButtonDanger')).toBeGreaterThanOrEqual(44);
+  });
+
+  it('云端备份列表的行间距与同行按钮间距在窄屏/触屏下 ≥8px', () => {
+    const rules = rulesOf('components/WebDavSettings.module.css');
+    for (const className of ['fileList', 'fileActions']) {
+      const gaps = rules
+        .filter((rule) => inSettingsNarrowOrCoarse(rule.media) && selectorMatches(rule.selector, className))
+        .flatMap((rule) => declareValues(rule.body, 'gap'));
+      expect(gaps.length).toBeGreaterThan(0);
+      for (const gap of gaps) {
+        expect(gap.px).not.toBeNull();
+        expect(gap.px as number).toBeGreaterThanOrEqual(8);
+      }
+    }
+  });
+
+  it('自定义开关在窄屏/触屏下命中区 ≥44px，可见轨道仍为 32px 高（实测 32px）', () => {
+    const rules = rulesOf('components/ui.module.css');
+    expect(coarseBoxHeightPx(rules, 'toggle')).toBeGreaterThanOrEqual(44);
+
+    // 媒体查询内轨道 ::before 保持 32 高，开关本体视觉尺寸不变。
+    const track = rules.find(
+      (rule) => inSettingsNarrowOrCoarse(rule.media) && rule.selector === '.toggle::before',
+    );
+    expect(track).toBeDefined();
+    expect(declareValues(track!.body, 'height').map((value) => value.px)).toEqual([32]);
+  });
+
+  it('提示条长文本在窄屏/触屏下允许换行（避免无空格备份文件名撑出横向溢出）', () => {
+    const guard = rulesOf('pages/SettingsPage.module.css').find(
+      (rule) => inSettingsNarrowOrCoarse(rule.media) && rule.selector === '.notice > span',
+    );
+    expect(guard).toBeDefined();
+    expect(/overflow-wrap:\s*anywhere/.test(guard!.body)).toBe(true);
+  });
+
+  it('以上改动只落在窄屏/触屏媒体查询内（桌面逐像素不变）', () => {
+    const settingsRules = rulesOf('pages/SettingsPage.module.css');
+    const webdavRules = rulesOf('components/WebDavSettings.module.css');
+    const uiRules = rulesOf('components/ui.module.css');
+
+    /** 媒体查询外的某类名盒尺寸声明（px）；无声明返回 null。 */
+    const baseBoxPx = (rules: CssRule[], className: string, property: string): number | null => {
+      const values = rules
+        .filter((rule) => rule.media === null && selectorMatches(rule.selector, className))
+        .flatMap((rule) => declareValues(rule.body, property))
+        .map((value) => value.px)
+        .filter((px): px is number => px !== null);
+      return values.length === 0 ? null : Math.max(...values);
+    };
+
+    // 媒体查询外：种子色输入框无尺寸声明；行内按钮仍是 36；开关仍是 32。
+    expect(baseBoxPx(settingsRules, 'seedColorInput', 'height')).toBeNull();
+    expect(baseBoxPx(settingsRules, 'seedColorInput', 'min-height')).toBeNull();
+    expect(baseBoxPx(webdavRules, 'linkButton', 'min-height')).toBe(36);
+    expect(baseBoxPx(webdavRules, 'linkButtonDanger', 'min-height')).toBe(36);
+    expect(baseBoxPx(uiRules, 'toggle', 'height')).toBe(32);
+  });
+});
