@@ -79,7 +79,8 @@
 }
 
 .chipCaret {
-  font-size: 11px;
+  /* 可见文本下限 12px（原 11px 装饰性三角也未达下限）。 */
+  font-size: 12px;
   opacity: 0.7;
 }
 
@@ -280,4 +281,13 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--md-sys-color-primary);
+}
+
+/* 触屏：筛选清除图标的命中区抬到 32×32（叉号视觉不变，仅扩大可点区域）；
+   鼠标环境下保持原 22×22，桌面观感不变。 */
+@media (pointer: coarse) {
+  .chipClear {
+    width: 32px;
+    height: 32px;
+  }
 }
