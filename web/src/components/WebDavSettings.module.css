@@ -290,3 +290,23 @@
   gap: 8px;
   margin-top: 16px;
 }
+
+/*
+ * 窄屏 / 触屏：云端备份列表的行内「恢复 / 删除」命中区抬到 44 高（按钮无底色，
+ * 只多出透明留白，字号不变），并把相邻行与同行按钮间距放到 ≥8px，降低误触。
+ * 鼠标 + ≥992px 的桌面不命中。
+ */
+@media (max-width: 991.98px), (pointer: coarse) {
+  .linkButton,
+  .linkButtonDanger {
+    min-height: 44px;
+  }
+
+  .fileList {
+    gap: 8px;
+  }
+
+  .fileActions {
+    gap: 8px;
+  }
+}
